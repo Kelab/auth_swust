@@ -18,7 +18,7 @@ script:
   - "python setup.py install"
   - "python setup.py bdist"
   - "ls "
-  - "tree "
+  - "ls dist"
 
 notifications:
   email: false
