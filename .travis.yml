@@ -16,3 +16,7 @@ cache:
 
 script:
   - "python setup.py install"
+  - "python setup.py bdist"
+
+notifications:
+  email: false
