@@ -17,6 +17,16 @@ cache:
 script:
   - "python setup.py install"
   - "python setup.py bdist"
+  - "ls "
+  - "tree "
 
 notifications:
   email: false
+  
+deploy:
+  provider: releases
+  api_key: "GITHUB OAUTH TOKEN"
+  file: "FILE TO UPLOAD"
+  skip_cleanup: true
+  on:
+    tags: true
