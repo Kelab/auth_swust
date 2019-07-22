@@ -65,7 +65,6 @@ class Login:
         cookie_jar.set("username", self.username, expires=7)
         cookie_jar.set("password", self.password, expires=7)
 
-        print(post_data)
 
         self.sess.post(URL.index_url, data=self.post_data, headers=get_one())
 
@@ -75,7 +74,6 @@ class Login:
         <input name="_eventId" type="hidden" value="submit"/>,
         <input name="geolocation" type="hidden"/>
         """
-        print("parse_hidden")
         bs = BeautifulSoup(self.res.text, "lxml")
         execution_ = bs.select_one('#fm1 > ul input[name="execution"]')
         _eventId_ = bs.select_one('#fm1 > ul input[name="_eventId"]')
