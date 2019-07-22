@@ -1,0 +1,18 @@
+sudo: false
+dist: xenial
+
+language: python
+
+python:
+  - "3.6"
+
+install:
+  - "pip install -U pip setuptools"
+  - "pip install -r requirements.txt"
+
+cache:
+  directories:
+    - $HOME/.pip-cache/
+
+script:
+  - "python setup.py install"
