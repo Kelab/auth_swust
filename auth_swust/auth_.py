@@ -2,16 +2,16 @@ import os
 from io import BytesIO
 
 import requests
-from requests.cookies import RequestsCookieJar
-from requests import ConnectionError
-from bs4 import BeautifulSoup
 from PIL import Image
+from bs4 import BeautifulSoup
+from requests import ConnectionError
+from requests.cookies import RequestsCookieJar
 
 from .captcha_recognition import predict_captcha
-from .headers import get_one
 from .constants import URL
-from .tools import retry
+from .headers import get_one
 from .tools import encrypt
+from .tools import retry
 
 
 class Login:
@@ -113,7 +113,13 @@ class Login:
     def check_success(self):
         # 如果有 302 跳转，说明没登录
         res = self.sess.get(URL.student_info_url, allow_redirects=False)
-        if res.status_code == 302:
+        try:
+            res.json()
+        except:
+            flag = False
+        else:
+            flag = True
+        if res.status_code == 302 or not flag:
             return False
         else:
             return res

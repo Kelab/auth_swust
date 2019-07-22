@@ -10,6 +10,7 @@ setuptools.setup(
     install_requires=['beautifulsoup4>=4.7.1', 'Keras>=2.2.4','lxml>=4.3.4','lxml>=4.3.4','tensorflow>=1.14.0','tensorflow>=1.14.0','scikit-image>=0.15.0'],
     classifiers=[
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],

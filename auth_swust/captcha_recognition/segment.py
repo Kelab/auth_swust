@@ -1,8 +1,8 @@
+import numpy as np
+from PIL import Image
 from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
+
 np.set_printoptions(threshold=np.inf)
 
 
