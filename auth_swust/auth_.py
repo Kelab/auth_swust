@@ -1,6 +1,8 @@
 from io import BytesIO
 
+import urllib3
 import requests
+
 from PIL import Image
 from bs4 import BeautifulSoup
 from requests import ConnectionError
@@ -9,6 +11,8 @@ from .captcha_recognition import predict_captcha
 from .constants import URL
 from .headers import get_one
 from .tools import encrypt, retry
+
+urllib3.disable_warnings()
 
 
 class Login:
