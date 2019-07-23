@@ -3,8 +3,6 @@ from PIL import Image
 from skimage import filters
 from skimage.morphology import disk, erosion, dilation
 
-np.set_printoptions(threshold=np.inf)
-
 
 def count_white_num(img: np.ndarray, x, y):
     nearDots = 0
@@ -122,7 +120,6 @@ def convert_grey(image: Image.Image, N: int) -> np.ndarray:
     image = image.convert('L')
 
     image_array = np.array(image)
-
     return image_array
 
 

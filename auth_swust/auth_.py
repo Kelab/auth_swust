@@ -9,8 +9,7 @@ from requests.cookies import RequestsCookieJar
 from .captcha_recognition import predict_captcha
 from .constants import URL
 from .headers import get_one
-from .tools import encrypt
-from .tools import retry
+from .tools import encrypt, retry
 
 
 class Login:

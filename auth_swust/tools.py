@@ -28,12 +28,3 @@ def encrypt(plaintext_text, public_modulus_hex, public_exponent_hex):
     plaintext = int(plaintext_text[::-1].encode("utf-8").hex(), 16)
     ciphertext = pow(plaintext, public_exponent, public_modulus)
     return '%x' % ciphertext  # return hex representation
-
-
-class StopRetry(Exception):
-    def __repr__(self):
-        return 'retry stop'
-
-
-if __name__ == '__main__':
-    pass
