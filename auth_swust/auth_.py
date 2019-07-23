@@ -4,7 +4,6 @@ import requests
 from PIL import Image
 from bs4 import BeautifulSoup
 from requests import ConnectionError
-from requests.cookies import RequestsCookieJar
 
 from .captcha_recognition import predict_captcha
 from .constants import URL
@@ -17,7 +16,6 @@ class Login:
         self.username = username
         self.password = password
         _sess = requests.session()
-        _sess.headers = get_one()
         self.sess = _sess
 
         self.cap_code = None
@@ -29,8 +27,9 @@ class Login:
         self._eventId_value = ""
         self.geolocation_value = ""
 
-    def get_init_sess(self, url):
-        self.res = self.sess.get(url)
+    def get_init_sess(self):
+        self.sess.headers = get_one()
+        self.res = self.sess.get(URL.index_url)
 
     def get_encrypt_key(self):
         try:
@@ -58,12 +57,11 @@ class Login:
         }
         self.post_data = post_data
 
-        cookie_jar = RequestsCookieJar()
-        cookie_jar.set("remember", "true", expires=7)
-        cookie_jar.set("username", self.username, expires=7)
-        cookie_jar.set("password", self.password, expires=7)
+        self.sess.cookies.set("remember", "true", expires=7)
+        self.sess.cookies.set("username", self.username, expires=7)
+        self.sess.cookies.set("password", self.password, expires=7)
 
-        self.sess.post(URL.index_url, data=self.post_data, headers=get_one())
+        self.sess.post(URL.index_url, data=self.post_data)
 
     def parse_hidden(self):
         """
@@ -124,7 +122,7 @@ class Login:
 
     @retry(times=3, second=0.3)
     def try_login(self):
-        self.get_init_sess(URL.index_url)
+        self.get_init_sess()
         self.get_cap()
         self.parse_hidden()
         self.get_encrypt_key()
@@ -133,7 +131,8 @@ class Login:
 
     def get_cookie_jar_obj(self):
         self.add_server_cookie()
+
         return self.sess.cookies
 
     def add_server_cookie(self):
-        self.sess.get(URL.jwc_auth_url)
+        self.sess.get(URL.jwc_auth_url, verify=False)
