@@ -132,4 +132,8 @@ class Login:
         return self.check_success()
 
     def get_cookie_jar_obj(self):
+        self.add_server_cookie()
         return self.sess.cookies
+
+    def add_server_cookie(self):
+        self.sess.get(URL.jwc_auth_url)

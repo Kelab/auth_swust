@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(name="auth_swust",
-                 version="1.0.1",
+                 version="1.0.3",
                  author="BuddingLab",
                  author_email="admin@maxlv.org,",
                  description="swust auto login package",
