@@ -1,4 +1,3 @@
-import os
 from io import BytesIO
 
 import requests
@@ -65,7 +64,6 @@ class Login:
         cookie_jar.set("username", self.username, expires=7)
         cookie_jar.set("password", self.password, expires=7)
 
-
         self.sess.post(URL.index_url, data=self.post_data, headers=get_one())
 
     def parse_hidden(self):
@@ -90,6 +88,7 @@ class Login:
         cap = self.sess.get(URL.captcha_url)
         imgBuf = BytesIO(cap.content)
         flag = True
+        # 有时候获取不到验证码，那就重新请求验证码
         while flag is True:
             try:
                 cap = self.sess.get(URL.captcha_url)
@@ -112,11 +111,13 @@ class Login:
         # 如果有 302 跳转，说明没登录
         res = self.sess.get(URL.student_info_url, allow_redirects=False)
         try:
+            # 因为教务处的劫持，也会返回 200，检测一下是否能转为 json
             res.json()
-        except:
+        except Exception:
             flag = False
         else:
             flag = True
+
         if res.status_code == 302 or not flag:
             return False
         else:
