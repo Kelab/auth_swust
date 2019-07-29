@@ -1,8 +1,7 @@
 from io import BytesIO
 
-import urllib3
 import requests
-
+import urllib3
 from PIL import Image
 from bs4 import BeautifulSoup
 from requests import ConnectionError
@@ -30,6 +29,7 @@ class Login:
         self.execution_value = ""
         self._eventId_value = ""
         self.geolocation_value = ""
+
 
     def get_init_sess(self):
         self.sess.headers = get_one()
@@ -65,7 +65,7 @@ class Login:
         self.sess.cookies.set("username", self.username, expires=7)
         self.sess.cookies.set("password", self.password, expires=7)
 
-        self.sess.post(URL.index_url, data=self.post_data)
+        self.sess.post(URL.index_url, data=self.post_data, timeout=5)
 
     def parse_hidden(self):
         """
@@ -77,40 +77,44 @@ class Login:
         execution_ = bs.select_one('#fm1 > ul input[name="execution"]')
         _eventId_ = bs.select_one('#fm1 > ul input[name="_eventId"]')
         geolocation_ = bs.select_one('#fm1 > ul input[name="geolocation"]')
-        self.execution_value = execution_.attrs['value']
-        self._eventId_value = _eventId_.attrs['value']
+        if execution_ is not None:
+            self.execution_value = execution_.attrs['value']
+            self._eventId_value = _eventId_.attrs['value']
 
-        try:
-            self.geolocation_value = geolocation_.attrs['value']
-        except KeyError:
-            self.geolocation_value = ""
+            try:
+                # 防止以后学校再增加此字段
+                self.geolocation_value = geolocation_.attrs['value']
+            except KeyError:
+                self.geolocation_value = ""
 
     def get_cap(self):
-        cap = self.sess.get(URL.captcha_url)
-        imgBuf = BytesIO(cap.content)
+        im = None
         flag = True
         # 有时候获取不到验证码，那就重新请求验证码
         while flag is True:
             try:
-                cap = self.sess.get(URL.captcha_url)
+                cap = self.sess.get(URL.captcha_url, timeout=3)
                 imgBuf = BytesIO(cap.content)
                 im = Image.open(imgBuf)
+            except requests.ConnectTimeout:
+                flag = False
             except Exception:
                 pass
             else:
                 flag = False
 
         # 验证码识别
-        code = predict_captcha(im)
-        if code:
-            self.cap_code = code
-        else:
-            self.cap_code = 'xxxx'
+        if im is not None:
+            code = predict_captcha(im)
+            if code:
+                self.cap_code = code
+            else:
+                self.cap_code = ''
 
     # 检查是否登陆成功
     def check_success(self):
-        # 如果有 302 跳转，说明没登录
-        res = self.sess.get(URL.student_info_url, allow_redirects=False)
+        # 如果有 解析不了json说明为False
+        res = self.sess.get(URL.student_info_url, allow_redirects=True)
         try:
             # 因为教务处的劫持，也会返回 200，检测一下是否能转为 json
             res.json()
@@ -119,19 +123,23 @@ class Login:
         else:
             flag = True
 
-        if res.status_code == 302 or not flag:
+        if not flag:
             return False
         else:
             return res
 
-    @retry(times=3, second=0.3)
+    @retry(times=5, second=0.3)
     def try_login(self):
-        self.get_init_sess()
-        self.get_cap()
-        self.parse_hidden()
-        self.get_encrypt_key()
-        self.get_auth_sess()
-        return self.check_success()
+        try:
+            self.get_init_sess()
+            self.get_cap()
+            self.parse_hidden()
+            self.get_encrypt_key()
+            self.get_auth_sess()
+            return self.check_success()
+        except Exception as e:
+            print("try_login", e)
+            return False
 
     def get_cookie_jar_obj(self):
         self.add_server_cookie()

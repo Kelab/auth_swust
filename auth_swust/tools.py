@@ -7,6 +7,7 @@ def retry(times=3, second=0.3):  # 默认重试间隔为0.3秒，重试次数为
             i = 0
             result = func(*args, **kwargs)
             while not result and i < times:
+                print(f"retry {i + 1} times")
                 time.sleep(second)
                 i += 1
                 result = func(*args, **kwargs)
