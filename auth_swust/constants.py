@@ -10,6 +10,7 @@ _ = socket.gethostbyname(dean_url)
 
 
 class URL():
+    auth_server = f"http://{cas_swust_ip}/"
     auth_server_url = f"http://{cas_swust_ip}/authserver/login?service="
     index_url = auth_server_url + 'http://my.swust.edu.cn/mht_shall/a/service/serviceFrontManage/cas'
     jwc_auth_url = auth_server_url + "https://matrix.dean.swust.edu.cn/acadmicManager/index.cfm?event=studentPortal:DEFAULT_EVENT"

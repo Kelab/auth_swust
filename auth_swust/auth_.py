@@ -30,7 +30,6 @@ class Login:
         self._eventId_value = ""
         self.geolocation_value = ""
 
-
     def get_init_sess(self):
         self.sess.headers = get_one()
         self.res = self.sess.get(URL.index_url)
