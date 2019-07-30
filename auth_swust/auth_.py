@@ -1,7 +1,6 @@
 from io import BytesIO
 
 import requests
-import urllib3
 from bs4 import BeautifulSoup
 from PIL import Image
 from requests import ConnectionError
@@ -11,14 +10,12 @@ from .constants import URL
 from .headers import get_one
 from .tools import encrypt, retry
 
-urllib3.disable_warnings()
-
 
 class Login:
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        _sess = requests.session()
+        _sess = requests.Session()
         self.sess = _sess
 
         self.cap_code = None
