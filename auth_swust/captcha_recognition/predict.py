@@ -8,7 +8,7 @@ from .img_process import process
 from .segment import segment_image
 
 # 使用绝对路径 设置model的位置
-model_path = Path(__file__).parent.joinpath('model', 'captcha_cnn.model')
+model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.model'))
 
 # 加载模型
 model = load_model(model_path)
