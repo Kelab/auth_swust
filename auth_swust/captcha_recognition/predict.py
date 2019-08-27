@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 import string
 import numpy as np
 import tensorflow as tf
@@ -8,8 +8,7 @@ from .img_process import process
 from .segment import segment_image
 
 # 使用绝对路径 设置model的位置
-path = os.path.split(os.path.realpath(__file__))[0]
-model_path = os.path.join(path, r'model\captcha_cnn.model')
+model_path = Path(__file__).parent.joinpath('model', 'captcha_cnn.model')
 
 # 加载模型
 model = load_model(model_path)
