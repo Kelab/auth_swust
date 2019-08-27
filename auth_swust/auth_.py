@@ -1,8 +1,8 @@
 from io import BytesIO
 
 import requests
-from bs4 import BeautifulSoup
 from PIL import Image
+from bs4 import BeautifulSoup
 from requests import ConnectionError
 
 from .captcha_recognition import predict_captcha
@@ -156,3 +156,4 @@ class Login:
 
     def add_server_cookie(self):
         self.sess.get(URL.jwc_auth_url, verify=False)
+        self.sess.get(URL.syk_auth_url, verify=False)
