@@ -12,7 +12,8 @@ from .tools import encrypt, retry
 
 
 class Login:
-    def __init__(self, username, password):
+    def __init__(self, username, password, debug=False):
+        self.debug = debug
         self.username = username
         self.password = password
         _sess = requests.Session()
@@ -43,6 +44,9 @@ class Login:
     def get_init_sess(self):
         self.sess.headers = get_one()
         self.res = self.sess.get(URL.index_url)
+        if self.debug:
+            print('get_init_sess')
+            print('init_sess：', self.res)
 
     def get_cap(self):
         im = None
@@ -67,6 +71,10 @@ class Login:
                 self.cap_code = code
             else:
                 self.cap_code = ''
+
+        if self.debug:
+            print('get_cap')
+            print('cap_code：', self.cap_code)
 
     def parse_hidden(self):
         """
@@ -132,6 +140,10 @@ class Login:
 
         self.sess.post(URL.index_url, data=self.post_data, timeout=5)
 
+        if self.debug:
+            print('get_auth_sess')
+            print('encrypted_pw：', encrypted_pw)
+
     # 检查是否登陆成功
     def check_success(self):
         # 如果有 解析不了json说明为False
@@ -145,8 +157,12 @@ class Login:
             flag = True
 
         if not flag:
+            if self.debug:
+                print('check failed')
             return False
         else:
+            if self.debug:
+                print('check success')
             return res
 
     def get_cookie_jar_obj(self):
@@ -157,3 +173,5 @@ class Login:
     def add_server_cookie(self):
         self.sess.get(URL.jwc_auth_url, verify=False)
         self.sess.get(URL.syk_auth_url, verify=False)
+        if self.debug:
+            print(self.sess.cookies)
