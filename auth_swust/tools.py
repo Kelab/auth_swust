@@ -1,4 +1,5 @@
 import time
+from bs4 import BeautifulSoup
 
 
 def retry(times=3, second=0.3):  # 默认重试间隔为0.3秒，重试次数为3次
@@ -29,3 +30,15 @@ def encrypt(plaintext_text, public_modulus_hex, public_exponent_hex):
     plaintext = int(plaintext_text[::-1].encode("utf-8").hex(), 16)
     ciphertext = pow(plaintext, public_exponent, public_modulus)
     return '%x' % ciphertext  # return hex representation
+
+
+def meta_redirect(content):
+    soup = BeautifulSoup(content, 'lxml')
+
+    result = soup.find("meta", attrs={"http-equiv": "refresh"})
+    if result:
+        wait, text = result["content"].split(";")
+        if text.strip().lower().startswith("url="):
+            url = text[4:]
+            return True, url
+    return False, None

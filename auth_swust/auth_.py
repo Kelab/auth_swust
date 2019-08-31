@@ -8,7 +8,7 @@ from requests import ConnectionError
 from .captcha_recognition import predict_captcha
 from .constants import URL
 from .headers import get_one
-from .tools import encrypt, retry
+from .tools import encrypt, retry, meta_redirect
 
 
 class Login:
@@ -28,6 +28,30 @@ class Login:
         self._eventId_value = ""
         self.geolocation_value = ""
 
+    def get_redirections_hooks(self, response: requests.Response, *args,
+                               **kwargs):
+        sess = self.sess
+        redirected, url = meta_redirect(response.text)
+
+        while redirected:
+            print("get redirected:", redirected)
+            print("get redirect url:", url)
+            response = sess.get(url, **kwargs)
+            redirected, url = meta_redirect(response.text)
+        return response
+
+    def post_redirections_hooks(self, response: requests.Response, *args,
+                                **kwargs):
+        sess = self.sess
+        redirected, url = meta_redirect(response.text)
+
+        while redirected:
+            print("post redirected:", redirected)
+            print("post redirect url:", url)
+            response = sess.post(URL.index_url, data=self.post_data, timeout=5)
+            redirected, url = meta_redirect(response.text)
+        return response
+
     @retry(times=5, second=0.3)
     def try_login(self):
         try:
@@ -36,6 +60,7 @@ class Login:
             self.parse_hidden()
             self.get_encrypt_key()
             self.get_auth_sess()
+            self.add_server_cookie()
             return self.check_success()
         except Exception as e:
             print("try_login", e)
@@ -43,38 +68,37 @@ class Login:
 
     def get_init_sess(self):
         self.sess.headers = get_one()
-        self.res = self.sess.get(URL.index_url)
+        self.res = self.sess.get(
+            URL.index_url, hooks={'response': self.get_redirections_hooks})
         if self.debug:
             print('get_init_sess')
-            print('init_sess：', self.res)
 
     def get_cap(self):
         im = None
-        flag = True
-        # 有时候获取不到验证码，那就重新请求验证码
-        while flag is True:
+        while self.cap_code is None:
+            if self.debug:
+                print('get_cap')
+
             try:
-                cap = self.sess.get(URL.captcha_url, timeout=3)
+                cap = self.sess.get(
+                    URL.captcha_url,
+                    timeout=3,
+                    hooks={'response': self.get_redirections_hooks})
                 imgBuf = BytesIO(cap.content)
                 im = Image.open(imgBuf)
-            except requests.ConnectTimeout:
-                flag = False
             except Exception:
                 pass
-            else:
-                flag = False
 
-        # 验证码识别
-        if im is not None:
-            code = predict_captcha(im)
-            if code:
-                self.cap_code = code
-            else:
-                self.cap_code = ''
+            # 验证码识别
+            if im is not None:
+                code = predict_captcha(im)
+                if code:
+                    self.cap_code = code
+                else:
+                    self.cap_code = None
 
-        if self.debug:
-            print('get_cap')
-            print('cap_code：', self.cap_code)
+            if self.debug:
+                print('cap_code：', self.cap_code)
 
     def parse_hidden(self):
         """
@@ -138,7 +162,10 @@ class Login:
                               domain='cas.swust.edu.cn',
                               path='/')
 
-        self.sess.post(URL.index_url, data=self.post_data, timeout=5)
+        self.sess.post(URL.index_url,
+                       data=self.post_data,
+                       timeout=5,
+                       hooks={'response': self.post_redirections_hooks})
 
         if self.debug:
             print('get_auth_sess')
@@ -147,7 +174,9 @@ class Login:
     # 检查是否登陆成功
     def check_success(self):
         # 如果有 解析不了json说明为False
-        res = self.sess.get(URL.student_info_url, allow_redirects=True)
+        res = self.sess.get(URL.student_info_url,
+                            allow_redirects=True,
+                            hooks={'response': self.get_redirections_hooks})
         try:
             # 因为教务处的劫持，也会返回 200，检测一下是否能转为 json
             res.json()
@@ -155,6 +184,9 @@ class Login:
             flag = False
         else:
             flag = True
+
+        if self.debug:
+            print("check_success", res.text[:1000])
 
         if not flag:
             if self.debug:
@@ -166,12 +198,14 @@ class Login:
             return res
 
     def get_cookie_jar_obj(self):
-        self.add_server_cookie()
-
         return self.sess.cookies
 
     def add_server_cookie(self):
-        self.sess.get(URL.jwc_auth_url, verify=False)
-        self.sess.get(URL.syk_auth_url, verify=False)
+        self.sess.get(URL.jwc_auth_url,
+                      verify=False,
+                      hooks={'response': self.get_redirections_hooks})
+        self.sess.get(URL.syk_auth_url,
+                      verify=False,
+                      hooks={'response': self.get_redirections_hooks})
         if self.debug:
             print(self.sess.cookies)
