@@ -3,25 +3,19 @@ from PIL import Image
 from skimage import filters
 from skimage.morphology import disk, erosion, dilation
 
+cord_list = [[0, 1], [1, 0], [1, 1], [-1, -1], [-1, 0], [-1, 1], [0, -1],
+             [1, -1]]
+
 
 def count_white_num(img: np.ndarray, x, y):
     nearDots = 0
-    if img[x - 1, y - 1] > 245:
-        nearDots += 1
-    if img[x - 1, y] > 245:
-        nearDots += 1
-    if img[x - 1, y + 1] > 245:
-        nearDots += 1
-    if img[x, y - 1] > 245:
-        nearDots += 1
-    if img[x, y + 1] > 245:
-        nearDots += 1
-    if img[x + 1, y - 1] > 245:
-        nearDots += 1
-    if img[x + 1, y] > 245:
-        nearDots += 1
-    if img[x + 1, y + 1] > 245:
-        nearDots += 1
+
+    # 遍历八邻域
+    for cord in cord_list:
+        x = x + cord[0]
+        y = y + cord[1]
+        if img[x, y] > 245:
+            nearDots += 1
 
     return nearDots
 
@@ -44,6 +38,7 @@ def clearNoise(img: np.ndarray, N: int, Z: int):
                     img[x, y] = 255
 
 
+# 根据公式计算rgb颜色转换后的灰度值
 def cal_gray_num(color):
     # L = r * .299 + g * .587 + b * .114
     L = 0.212671 * color[0] + 0.715160 * color[1] + 0.072169 * color[2]
@@ -59,27 +54,18 @@ def get_pixel(img, x, y, thresh, N):
         return None
 
     nearDots = 0
-    if L == (cal_gray_num(img.getpixel((x - 1, y - 1))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x - 1, y))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x - 1, y + 1))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x, y - 1))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x, y + 1))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x + 1, y - 1))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x + 1, y))) < thresh):
-        nearDots += 1
-    if L == (cal_gray_num(img.getpixel((x + 1, y + 1))) < thresh):
-        nearDots += 1
+
+    # 遍历八邻域
+    for cord in cord_list:
+        x = x + cord[0]
+        y = y + cord[1]
+        gray_num = cal_gray_num(img.getpixel((x, y)))
+        if L == (gray_num < thresh):
+            nearDots += 1
 
     if nearDots < N:
         return (255, 255, 255)
-    else:
-        return None
+    return None
 
 
 def clear_background_noise_line(image, thresh, N, Z):
@@ -99,18 +85,15 @@ def clear_background_noise_line(image, thresh, N, Z):
                     image.putpixel((x, y), color)
 
 
-def convert_grey(image: Image.Image, N: int) -> np.ndarray:
+def convert_gray(image: Image.Image, N: int) -> np.ndarray:
     """
     :param img:  图片
     :return: PIL.Image
     """
-
     w, h = image.size
+    # 因为验证码位置相对固定，所以将边界都置为白色
     for x in range(w):
         for y in range(h):
-            r, g, b = image.getpixel((x, y))
-
-            # 把边缘都清空了
             if x < 15 or y < 5 or w - x < 5 or h - y < 5:
                 image.putpixel((x, y), (255, 255, 255))
 
@@ -118,26 +101,27 @@ def convert_grey(image: Image.Image, N: int) -> np.ndarray:
     clear_background_noise_line(image, 35, N, 2)
 
     image = image.convert('L')
-
     image_array = np.array(image)
+
     return image_array
 
 
+def cal_noise_num(image_array: np.ndarray) -> int:
+    image_array_flatten = image_array.flatten()
+    image_array_flatten = image_array_flatten[image_array_flatten < 255]
+    image_array_flatten = image_array_flatten[image_array_flatten > 240]
+    return image_array_flatten.shape[0]
+
+
 def denoise(image_array: np.ndarray):
+
     # 八邻域降噪
     clearNoise(image_array, 5, 2)
 
-    image_array_flatten = image_array.flatten()
-    image_array_flatten = image_array_flatten[image_array_flatten < 255]
-    image_array_flatten = image_array_flatten[image_array_flatten > 240]
-
-    if image_array_flatten.shape[0] > 300:
+    if cal_noise_num(image_array) > 300:
         clearNoise(image_array, 4, 1)
 
-    image_array_flatten = image_array.flatten()
-    image_array_flatten = image_array_flatten[image_array_flatten < 255]
-    image_array_flatten = image_array_flatten[image_array_flatten > 240]
-    if image_array_flatten.shape[0] > 280:
+    if cal_noise_num(image_array) > 280:
         clearNoise(image_array, 5, 1)
 
     return image_array
@@ -150,7 +134,7 @@ def pre_binarization(image: Image.Image,
     :return: PIL.Image
     """
     # 转为 灰度图
-    image_array = convert_grey(image, clear_background_noise_line_value)
+    image_array = convert_gray(image, clear_background_noise_line_value)
     denoise(image_array)
 
     return image_array
