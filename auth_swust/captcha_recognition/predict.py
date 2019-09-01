@@ -29,6 +29,13 @@ def decode(pred_array):
     return predicted_word
 
 
+def _predict(subimages):
+    dataset = np.array(subimages)
+    with graph.as_default():
+        predicted_word = decode(model.predict(dataset.reshape((4, 1, 32, 32))))
+    return predicted_word
+
+
 def predict_captcha(captcha_image: Image.Image):
     """
     :param captcha_image: captcha image path
@@ -38,23 +45,14 @@ def predict_captcha(captcha_image: Image.Image):
     image = process(captcha_image)
     subimages = segment_image(image)
 
-    if subimages is not None:
-        dataset = np.array(subimages)
-        with graph.as_default():
-            predicted_word = decode(
-                model.predict(dataset.reshape((4, 1, 32, 32))))
-        return predicted_word
-
-    # segment_iamge 抽取小图像  降噪指数 3
-    image = process(captcha_image, 3)
-    subimages = segment_image(image)
+    # 第一遍没抽取出来四张，再来第二遍
+    if subimages is None:
+        # segment_iamge 抽取小图像  降噪指数 3
+        image = process(captcha_image, 3)
+        subimages = segment_image(image)
 
     if subimages is not None:
-        dataset = np.array(subimages)
-        with graph.as_default():
-            predicted_word = decode(
-                model.predict(dataset.reshape((4, 1, 32, 32))))
-        return predicted_word
+        return _predict(subimages)
 
     # 如果切割图片返回 None 说明没有切割出来 直接不预测
     return None
