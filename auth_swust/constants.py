@@ -4,9 +4,14 @@ my_swust_url = 'my.swust.edu.cn'
 dean_url = 'matrix.dean.swust.edu.cn'
 cas_swust_url = "cas.swust.edu.cn"
 
-cas_swust_ip = socket.gethostbyname(cas_swust_url)
-_ = socket.gethostbyname(my_swust_url)
-_ = socket.gethostbyname(dean_url)
+try:
+    cas_swust_ip = socket.gethostbyname(cas_swust_url)
+except:
+    cas_swust_ip = cas_swust_url
+
+
+# _ = socket.gethostbyname(my_swust_url)
+# _ = socket.gethostbyname(dean_url)
 
 
 class URL():
