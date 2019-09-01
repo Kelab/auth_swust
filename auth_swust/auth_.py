@@ -1,4 +1,5 @@
 import urllib3
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
 
@@ -11,11 +12,11 @@ from .tools import encrypt, retry, meta_redirect
 from .headers import get_one
 from .constants import URL
 from .captcha_recognition import predict_captcha
+from .log import AuthLogger
 
 
 class Login:
-    def __init__(self, username, password, debug=False):
-        self.debug = debug
+    def __init__(self, username, password):
         self.username = username
         self.password = password
         _sess = requests.Session()
@@ -35,7 +36,7 @@ class Login:
         sess = self.sess
         redirected, url = meta_redirect(response.text)
         while redirected:
-            print("get hooks: redirected url:", url)
+            AuthLogger.debug("get hooks: redirected url:{}".format(url))
             response = sess.get(url, **kwargs)
             redirected, url = meta_redirect(response.text)
         return response
@@ -46,7 +47,7 @@ class Login:
         redirected, url = meta_redirect(response.text)
 
         while redirected:
-            print("post hooks: redirected url:", url)
+            AuthLogger.debug("post hooks: redirected url:{}".format(url))
             response = sess.post(URL.index_url,
                                  data=self.post_data,
                                  timeout=5,
@@ -62,7 +63,7 @@ class Login:
         else:
             return {}
 
-    @retry(times=5, second=0.3)
+    @retry(times=5, second=1)
     def try_login(self):
         try:
             self.get_init_sess()
@@ -73,19 +74,19 @@ class Login:
             self.add_server_cookie()
             return self.check_success()
         except Exception as e:
-            print("try_login Exception:", e)
+            AuthLogger.debug("try_login Exception: {}".format(e))
             return False
 
     def get_init_sess(self):
         self.sess.headers = get_one()
         self.res = self.sess.get(URL.index_url, hooks=self.hooks("get"))
-        if self.debug:
-            print('get_init_sess')
+
+        AuthLogger.debug('get_init_sess')
 
     def get_cap(self):
         while self.cap_code is None:
-            if self.debug:
-                print('start get_cap')
+
+            AuthLogger.debug('start get_cap')
             im = None
             try:
                 cap = self.sess.get(URL.captcha_url,
@@ -102,8 +103,7 @@ class Login:
                 code = predict_captcha(im)
                 self.cap_code = code
 
-            if self.debug:
-                print('cap_code：', self.cap_code)
+            AuthLogger.debug('cap_code：{}'.format(self.cap_code))
 
     def parse_hidden(self):
         """
@@ -171,9 +171,8 @@ class Login:
                        timeout=5,
                        hooks=self.hooks("auth"))
 
-        if self.debug:
-            print('get_auth_sess')
-            print('encrypted_pw：', encrypted_pw)
+        AuthLogger.debug('get_auth_sess')
+        AuthLogger.debug('encrypted_pw：{}'.format(encrypted_pw))
 
     # 检查是否登陆成功
     def check_success(self):
@@ -190,16 +189,14 @@ class Login:
         else:
             flag = True
 
-        if self.debug:
-            print("check_success:", res.text[:1000])
+        AuthLogger.debug("check_success: {}".format(res.text[:100]))
 
         if not flag:
-            if self.debug:
-                print('check failed')
+
+            AuthLogger.debug('check failed')
             return False
         else:
-            if self.debug:
-                print('check success')
+            AuthLogger.debug('check success')
             return res
 
     def get_cookie_jar_obj(self):
@@ -208,5 +205,5 @@ class Login:
     def add_server_cookie(self):
         self.sess.get(URL.jwc_auth_url, verify=False, hooks=self.hooks("get"))
         self.sess.get(URL.syk_auth_url, verify=False, hooks=self.hooks("get"))
-        if self.debug:
-            print("self.sess.cookies", self.sess.cookies)
+
+        AuthLogger.debug("self.sess.cookies {}".format(self.sess.cookies))

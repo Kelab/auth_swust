@@ -12,8 +12,10 @@ usage:
    {"success":true,"code":"10000","msg":"成功","sub_code":"SUCCESS"...
 
 ... 或者你可以开启 debug 模式，看看每一步发生了什么:
-
-   >>> Login("xxxxx", "xxxxxx", debug=True)
+   >>> from auth_swust.log import AuthLogger
+   >>> import logging
+   >>> AuthLogger.setLevel(logging.DEBUG)
+   >>> Login("xxxxx", "xxxxxx")
    >>> res = login.try_login()
    get_init_sess
    get_cap
