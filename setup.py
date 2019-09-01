@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(name="auth_swust",
-                 version="1.0.10",
+                 version="1.0.11",
                  url='https://github.com/BuddingLab/auth_swust',
                  author="BuddingLab",
                  author_email="admin@maxlv.org,",
