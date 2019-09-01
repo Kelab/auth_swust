@@ -1,7 +1,9 @@
-from pathlib import Path
 import string
 import numpy as np
 import tensorflow as tf
+
+from PIL import Image
+from pathlib import Path
 from keras.models import load_model
 
 from .img_process import process
@@ -27,7 +29,7 @@ def decode(pred_array):
     return predicted_word
 
 
-def predict_captcha(captcha_image):
+def predict_captcha(captcha_image: Image.Image):
     """
     :param captcha_image: captcha image path
     :return: str 验证码

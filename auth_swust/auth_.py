@@ -1,14 +1,16 @@
-from io import BytesIO
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
+
+from io import BytesIO
 from PIL import Image
 from bs4 import BeautifulSoup
 from requests import ConnectionError
 
-from .captcha_recognition import predict_captcha
-from .constants import URL
-from .headers import get_one
 from .tools import encrypt, retry, meta_redirect
+from .headers import get_one
+from .constants import URL
+from .captcha_recognition import predict_captcha
 
 
 class Login:
@@ -32,25 +34,33 @@ class Login:
                                **kwargs):
         sess = self.sess
         redirected, url = meta_redirect(response.text)
-
         while redirected:
-            print("get redirected:", redirected)
-            print("get redirect url:", url)
+            print("get hooks: redirected url:", url)
             response = sess.get(url, **kwargs)
             redirected, url = meta_redirect(response.text)
         return response
 
-    def post_redirections_hooks(self, response: requests.Response, *args,
+    def auth_redirections_hooks(self, response: requests.Response, *args,
                                 **kwargs):
         sess = self.sess
         redirected, url = meta_redirect(response.text)
 
         while redirected:
-            print("post redirected:", redirected)
-            print("post redirect url:", url)
-            response = sess.post(URL.index_url, data=self.post_data, timeout=5)
+            print("post hooks: redirected url:", url)
+            response = sess.post(URL.index_url,
+                                 data=self.post_data,
+                                 timeout=5,
+                                 **kwargs)
             redirected, url = meta_redirect(response.text)
         return response
+
+    def hooks(self, tp="get"):
+        if tp == "get":
+            return {'response': self.get_redirections_hooks}
+        elif tp == "auth":
+            return {'response': self.auth_redirections_hooks}
+        else:
+            return {}
 
     @retry(times=5, second=0.3)
     def try_login(self):
@@ -63,59 +73,53 @@ class Login:
             self.add_server_cookie()
             return self.check_success()
         except Exception as e:
-            print("try_login", e)
+            print("try_login Exception:", e)
             return False
 
     def get_init_sess(self):
         self.sess.headers = get_one()
-        self.res = self.sess.get(
-            URL.index_url, hooks={'response': self.get_redirections_hooks})
+        self.res = self.sess.get(URL.index_url, hooks=self.hooks("get"))
         if self.debug:
             print('get_init_sess')
 
     def get_cap(self):
-        im = None
         while self.cap_code is None:
             if self.debug:
-                print('get_cap')
-
+                print('start get_cap')
+            im = None
             try:
-                cap = self.sess.get(
-                    URL.captcha_url,
-                    timeout=3,
-                    hooks={'response': self.get_redirections_hooks})
+                cap = self.sess.get(URL.captcha_url,
+                                    timeout=3,
+                                    hooks=self.hooks("get"))
                 imgBuf = BytesIO(cap.content)
-                im = Image.open(imgBuf)
+                im: Image.Image = Image.open(imgBuf)
             except Exception:
-                pass
+                continue
 
             # 验证码识别
             if im is not None:
+                # 返回字符或者 None
                 code = predict_captcha(im)
-                if code:
-                    self.cap_code = code
-                else:
-                    self.cap_code = None
+                self.cap_code = code
 
             if self.debug:
                 print('cap_code：', self.cap_code)
 
     def parse_hidden(self):
         """
-        <input name="execution" type="hidden" value="e1s1"/>,
-        <input name="_eventId" type="hidden" value="submit"/>,
-        <input name="geolocation" type="hidden"/>
+        解析 post 需要的参数
         """
         bs = BeautifulSoup(self.res.text, "lxml")
         execution_ = bs.select_one('#fm1 > ul input[name="execution"]')
         _eventId_ = bs.select_one('#fm1 > ul input[name="_eventId"]')
         geolocation_ = bs.select_one('#fm1 > ul input[name="geolocation"]')
         if execution_ is not None:
+            # <input name="execution" type="hidden" value="e1s1"/>,
             self.execution_value = execution_.attrs['value']
+            # <input name="_eventId" type="hidden" value="submit"/>,
             self._eventId_value = _eventId_.attrs['value']
-
+            # <input name="geolocation" type="hidden"/>
             try:
-                # 防止以后学校再增加此字段
                 self.geolocation_value = geolocation_.attrs['value']
             except KeyError:
                 self.geolocation_value = ""
@@ -165,7 +169,7 @@ class Login:
         self.sess.post(URL.index_url,
                        data=self.post_data,
                        timeout=5,
-                       hooks={'response': self.post_redirections_hooks})
+                       hooks=self.hooks("auth"))
 
         if self.debug:
             print('get_auth_sess')
@@ -175,8 +179,9 @@ class Login:
     def check_success(self):
         # 如果有 解析不了json说明为False
         res = self.sess.get(URL.student_info_url,
+                            verify=False,
                             allow_redirects=True,
-                            hooks={'response': self.get_redirections_hooks})
+                            hooks=self.hooks("get"))
         try:
             # 因为教务处的劫持，也会返回 200，检测一下是否能转为 json
             res.json()
@@ -186,7 +191,7 @@ class Login:
             flag = True
 
         if self.debug:
-            print("check_success", res.text[:1000])
+            print("check_success:", res.text[:1000])
 
         if not flag:
             if self.debug:
@@ -201,11 +206,7 @@ class Login:
         return self.sess.cookies
 
     def add_server_cookie(self):
-        self.sess.get(URL.jwc_auth_url,
-                      verify=False,
-                      hooks={'response': self.get_redirections_hooks})
-        self.sess.get(URL.syk_auth_url,
-                      verify=False,
-                      hooks={'response': self.get_redirections_hooks})
+        self.sess.get(URL.jwc_auth_url, verify=False, hooks=self.hooks("get"))
+        self.sess.get(URL.syk_auth_url, verify=False, hooks=self.hooks("get"))
         if self.debug:
-            print(self.sess.cookies)
+            print("self.sess.cookies", self.sess.cookies)
