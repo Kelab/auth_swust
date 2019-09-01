@@ -22,17 +22,22 @@ def retry(times=3, second=2):  # 默认重试间隔为0.3秒，重试次数为3�
     return decorator
 
 
-def encrypt(plaintext_text, public_modulus_hex, public_exponent_hex):
+def encrypt(public_modulus_hex, public_exponent_hex):
     """
-    Same output with the JS RSA encryptString function on http://www.ohdave.com/rsa/
+    闭包写法
+    Same output with the JS RSA encryptString function on http://www.ohdave.com/rsa/ \n
     Links: https://github.com/icemage001/10086/blob/dbe157b1a0cd9a7c9c0eee517abdbd7ee35072d9/RSA.py
     """
     public_modulus = int(public_modulus_hex, 16)
     public_exponent = int(public_exponent_hex, 16)
-    # Beware, plaintext must be short enough to fit in a single block!
-    plaintext = int(plaintext_text[::-1].encode("utf-8").hex(), 16)
-    ciphertext = pow(plaintext, public_exponent, public_modulus)
-    return '%x' % ciphertext  # return hex representation
+
+    def cipher(text):
+        # Beware, plaintext must be short enough to fit in a single block!
+        plaintext = int(text[::-1].encode("utf-8").hex(), 16)
+        ciphertext = pow(plaintext, public_exponent, public_modulus)
+        return '%x' % ciphertext  # return hex representation
+
+    return cipher
 
 
 def meta_redirect(content):

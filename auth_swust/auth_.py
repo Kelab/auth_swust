@@ -6,7 +6,8 @@ import requests
 from io import BytesIO
 from PIL import Image
 from bs4 import BeautifulSoup
-from requests import ConnectionError
+from requests import Response, ConnectionError
+from collections import defaultdict
 
 from .tools import encrypt, retry, meta_redirect
 from .headers import get_one
@@ -22,34 +23,31 @@ class Login:
         _sess = requests.Session()
         self.sess = _sess
 
+        self.init_response = None
         self.cap_code = None
         self.post_data = None
-        self.res = None
-        self.key_dict = None
+        self.hidden_values = defaultdict(str)
 
-        self.execution_value = ""
-        self._eventId_value = ""
-        self.geolocation_value = ""
-
-    def get_redirections_hooks(self, response: requests.Response, *args,
-                               **kwargs):
-        sess = self.sess
+    def get_redirections_hooks(self, response: Response, *args, **kwargs):
         redirected, url = meta_redirect(response.text)
+
         while redirected:
             AuthLogger.debug("get hooks: redirected url:{}".format(url))
-            response = sess.get(url, **kwargs)
+            response = self.sess.get(url, **kwargs)
             redirected, url = meta_redirect(response.text)
+
         return response
 
-    def auth_redirections_hooks(self, response: requests.Response, *args,
-                                **kwargs):
-        sess = self.sess
+    def auth_redirections_hooks(self, response: Response, *args, **kwargs):
         redirected, url = meta_redirect(response.text)
 
         while redirected:
             AuthLogger.debug("post hooks: redirected url:{}".format(url))
-            response = sess.post(URL.index_url, data=self.post_data, **kwargs)
+            response = self.sess.post(URL.index_url,
+                                      data=self.post_data,
+                                      **kwargs)
             redirected, url = meta_redirect(response.text)
+
         return response
 
     def hooks(self, tp="get"):
@@ -76,15 +74,15 @@ class Login:
 
     def get_init_sess(self):
         self.sess.headers = get_one()
-        self.res = self.sess.get(URL.index_url,
-                                 timeout=3,
-                                 hooks=self.hooks("get"))
+        self.init_response: Response = self.sess.get(URL.index_url,
+                                                     timeout=3,
+                                                     hooks=self.hooks("get"))
 
         AuthLogger.debug('get_init_sess')
 
     def get_cap(self):
+        _count = 1
         while self.cap_code is None:
-
             AuthLogger.debug('start get_cap')
             im = None
             try:
@@ -104,102 +102,92 @@ class Login:
 
             AuthLogger.debug('cap_code：{}'.format(self.cap_code))
 
+            _count = _count + 1
+            if _count > 5:
+                AuthLogger.error('五次获取验证码失败')
+                break
+
     def parse_hidden(self):
         """
         解析 post 需要的参数
+        <input name="execution" type="hidden" value="e1s1"/>,
+        <input name="_eventId" type="hidden" value="submit"/>,
+        <input name="geolocation" type="hidden"/>
         """
-        bs = BeautifulSoup(self.res.text, "lxml")
-        execution_ = bs.select_one('#fm1 > ul input[name="execution"]')
-        _eventId_ = bs.select_one('#fm1 > ul input[name="_eventId"]')
-        geolocation_ = bs.select_one('#fm1 > ul input[name="geolocation"]')
-        if execution_ is not None:
-            # <input name="execution" type="hidden" value="e1s1"/>,
-            self.execution_value = execution_.attrs['value']
-            # <input name="_eventId" type="hidden" value="submit"/>,
-            self._eventId_value = _eventId_.attrs['value']
-            # <input name="geolocation" type="hidden"/>
-            try:
-                self.geolocation_value = geolocation_.attrs['value']
-            except KeyError:
-                self.geolocation_value = ""
+        bs = BeautifulSoup(self.init_response.text, "lxml")
+        _execution = bs.select_one('#fm1 > ul input[name="execution"]')
+        _eventId = bs.select_one('#fm1 > ul input[name="_eventId"]')
+
+        if _execution is not None:
+            self.hidden_values['execution'] = _execution.attrs['value']
+            self.hidden_values['_eventId'] = _eventId.attrs['value']
+            # 可以不用对 hidden_values['geolocation'] 赋值
 
     def get_encrypt_key(self):
         try:
             key_resp = self.sess.get(URL.get_key_url)
             key_dict: dict = key_resp.json()
-            self.key_dict = key_dict
-
         except ConnectionError:
+            AuthLogger.debug('key server return:'.format(key_resp.text[:1000]))
             raise ValueError("无法获取加密 key")
 
-    def get_auth_sess(self):
-        modulus = self.key_dict['modulus']
-        public_exponent = self.key_dict['exponent']
+        modulus = key_dict.get('modulus')
+        public_exponent = key_dict.get('exponent')
 
+        # 逆序
         pw_re = self.password[::-1]
-        encrypted_pw = encrypt(pw_re, modulus, public_exponent)
+        _encrypted_pw = encrypt(modulus, public_exponent)(pw_re)
+        self.encrypted_pw = _encrypted_pw
+        AuthLogger.debug('encrypted password：{}'.format(_encrypted_pw))
 
+    def get_auth_sess(self):
         post_data = {
             "username": self.username,
-            "password": encrypted_pw,
+            "password": self.encrypted_pw,
             "captcha": self.cap_code,
-            "execution": self.execution_value,
-            "_eventId": self._eventId_value,
-            "geolocation": self.geolocation_value
+            "execution": self.hidden_values['execution'],
+            "_eventId": self.hidden_values['_eventId'],
+            "geolocation": self.hidden_values['geolocation']
         }
         self.post_data = post_data
 
-        self.sess.cookies.set("remember",
-                              "true",
-                              expires=365,
-                              domain='cas.swust.edu.cn',
-                              path='/')
-        self.sess.cookies.set("username",
-                              self.username,
-                              expires=365,
-                              domain='cas.swust.edu.cn',
-                              path='/')
-        self.sess.cookies.set("password",
-                              self.password,
-                              expires=365,
-                              domain='cas.swust.edu.cn',
-                              path='/')
+        resp = self.sess.post(URL.index_url,
+                              data=post_data,
+                              timeout=3,
+                              hooks=self.hooks("auth"))
 
-        self.sess.post(URL.index_url,
-                       data=self.post_data,
-                       timeout=3,
-                       hooks=self.hooks("auth"))
-
-        AuthLogger.debug('get_auth_sess')
-        AuthLogger.debug('encrypted_pw：{}'.format(encrypted_pw))
+        AuthLogger.debug('post_data: {}'.format(post_data))
+        AuthLogger.debug('get_auth_sess: {}'.format(resp.text[:1000]))
 
     # 检查是否登陆成功
     def check_success(self):
-        # 如果有 解析不了json说明为False
+        # 请求个人信息
         res = self.sess.get(URL.student_info_url,
                             verify=False,
                             allow_redirects=True,
                             hooks=self.hooks("get"))
+
+        AuthLogger.debug("验证是否登录: {}".format(res.text[:100]))
+
+        # 一般就是两种可能：
+        # 1. 没登录成功，302 跳到 cas.swust 页面，这时候执行 json() 方法会报错
+        # 2. 登录成功，成功获取到 json 格式的个人信息
         try:
-            # 因为教务处的劫持，也会返回 200，检测一下是否能转为 json
             res.json()
         except Exception:
-            flag = False
-        else:
-            flag = True
-
-        AuthLogger.debug("check_success: {}".format(res.text[:100]))
-
-        if not flag:
-
-            AuthLogger.debug('check failed')
+            AuthLogger.debug('login failed')
             return False
         else:
-            AuthLogger.debug('check success')
+            # 没报错就会执行到这儿
+            AuthLogger.debug('login success')
             return res
 
-    def get_cookie_jar_obj(self):
+    def get_cookies(self):
         return self.sess.cookies
+
+    def get_cookie_jar_obj(self):
+        AuthLogger.warn("deprecated: 请使用 get_cookies() 方法。")
+        return self.get_cookies()
 
     def add_server_cookie(self):
         self.sess.get(URL.jwc_auth_url, verify=False, hooks=self.hooks("get"))
