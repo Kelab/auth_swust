@@ -1,17 +1,17 @@
 import setuptools
 
 setuptools.setup(name="auth_swust",
-                 version="1.0.9",
-                 url='https://github.com/lengthmin/auth_swust',
+                 version="1.0.10",
+                 url='https://github.com/BuddingLab/auth_swust',
                  author="BuddingLab",
                  author_email="admin@maxlv.org,",
-                 description="swust auto login package",
+                 description="auth_swust",
                  packages=setuptools.find_packages(),
                  install_requires=[
                      'beautifulsoup4>=4.7.1',
-                     'Keras==2.2.4',
+                     'Keras>=2.2.4',
                      'lxml>=4.3.4',
-                     'tensorflow==1.14.0',
+                     'tensorflow>=1.14.0',
                      'Pillow>=6.1.0',
                      'requests>=2.22.0',
                      'scikit-image>=0.15.0',
