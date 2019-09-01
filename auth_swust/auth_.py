@@ -48,10 +48,7 @@ class Login:
 
         while redirected:
             AuthLogger.debug("post hooks: redirected url:{}".format(url))
-            response = sess.post(URL.index_url,
-                                 data=self.post_data,
-                                 timeout=5,
-                                 **kwargs)
+            response = sess.post(URL.index_url, data=self.post_data, **kwargs)
             redirected, url = meta_redirect(response.text)
         return response
 
@@ -79,7 +76,9 @@ class Login:
 
     def get_init_sess(self):
         self.sess.headers = get_one()
-        self.res = self.sess.get(URL.index_url, hooks=self.hooks("get"))
+        self.res = self.sess.get(URL.index_url,
+                                 timeout=3,
+                                 hooks=self.hooks("get"))
 
         AuthLogger.debug('get_init_sess')
 
@@ -168,7 +167,7 @@ class Login:
 
         self.sess.post(URL.index_url,
                        data=self.post_data,
-                       timeout=5,
+                       timeout=3,
                        hooks=self.hooks("auth"))
 
         AuthLogger.debug('get_auth_sess')
