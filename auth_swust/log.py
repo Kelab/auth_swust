@@ -17,8 +17,8 @@ LOGGING_CONFIG_DEFAULTS = dict(
     },
     formatters={
         "generic": {
-            "format": "%(asctime)s [%(levelname)s] [%(filename)s] [%(funcName)s] >>> %(message)s",
-            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+            "format": "%(asctime)s [%(levelname)s] [%(filename)s] [%(funcName)s] > %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S]",
             "class": "logging.Formatter",
         },
     }
