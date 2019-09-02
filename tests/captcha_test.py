@@ -13,7 +13,7 @@ class TestEvent(unittest.TestCase):
         img = Image.open(captcha_path)
         code = predict_captcha(img)
         print(code)
-        assert code == "IDZW"
+        assert code == "EEL1"
 
     def test_captcha2(self):
         # 使用绝对路径 设置model的位置
@@ -30,3 +30,20 @@ class TestEvent(unittest.TestCase):
         code = predict_captcha(img)
         print(code)
         assert code == "ZDSM"
+
+    def test_captcha4(self):
+        # 使用绝对路径 设置model的位置
+        captcha_path = str(captcha_folder.joinpath('captcha4.jpg'))
+        img = Image.open(captcha_path)
+        code = predict_captcha(img)
+        print(code)
+        assert code == "ZU59"
+
+    def test_captcha5(self):
+        # 使用绝对路径 设置model的位置
+        captcha_path = str(captcha_folder.joinpath('captcha5.jpg'))
+        img = Image.open(captcha_path)
+        code = predict_captcha(img)
+        print(code)
+        # 预测出 6V7C
+        assert code == "6V9G"
