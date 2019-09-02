@@ -1,4 +1,23 @@
+import sys
 import setuptools
+from setuptools.command.test import test as TestCommand
+
+with open("requirements.txt") as f:
+    install_requires = [line for line in f if line and line[0] not in "#-"]
+
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = ['--cov', 'tests/']
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
+
 
 setuptools.setup(name="auth_swust",
                  version="1.0.11",
@@ -7,15 +26,7 @@ setuptools.setup(name="auth_swust",
                  author_email="admin@maxlv.org,",
                  description="auth_swust",
                  packages=setuptools.find_packages(),
-                 install_requires=[
-                     'beautifulsoup4>=4.7.1',
-                     'Keras>=2.2.4',
-                     'lxml>=4.3.4',
-                     'tensorflow>=1.14.0',
-                     'Pillow>=6.1.0',
-                     'requests>=2.22.0',
-                     'scikit-image>=0.15.0',
-                 ],
+                 install_requires=install_requires,
                  classifiers=[
                      "Programming Language :: Python :: 3.6",
                      "Programming Language :: Python :: 3.7",

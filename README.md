@@ -8,6 +8,21 @@
 pip install -r requirements.txt
 ```
 
+测试所需依赖：
+```bash
+pip install -r dev/requirements_test.txt
+```
+测试：
+```bash
+python setup.py test
+```
+测试 coverage:
+```bash
+python setup.py test
+coverage html
+```
+
+
 在本地安装
 ```bash
 python setup.py install 
