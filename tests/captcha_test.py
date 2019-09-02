@@ -1,5 +1,6 @@
 import unittest
 from pathlib import Path
+
 from auth_swust import predict_captcha
 from PIL import Image
 

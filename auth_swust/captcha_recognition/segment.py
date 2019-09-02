@@ -22,15 +22,15 @@ def segment_image_by_region(image_array: np.ndarray) -> np.ndarray:
     image = image_array.transpose()
     # 我们要做的第一件事就是检测每个字母的位置，这就要用到`scikit-image`的`label`函数，它能找出图像中像素值相同且又连接在一起的像素块。这有点像连通分支。`label`函数的参数为图像数组，返回跟输入同型的数组。在返回的数组中，图像**连接在一起的区域**用不同的值来表示，在这些区域以外的像素用0来表示。
     labeled_image: np.ndarray = label(image, connectivity=2)
-    labeled_image_rs = remove_small_objects(labeled_image,
-                                            min_size=30,
-                                            connectivity=2)
+    labeled_image = remove_small_objects(labeled_image,
+                                         min_size=30,
+                                         connectivity=2)
 
     # 抽取每一张小图像，将它们保存到这个列表中。
     subimages = []
 
     # `scikit-image`库还提供抽取连续区域的函数：`regionprops`。遍历这些区域，分别对它们进行处理。
-    for idx, region in enumerate(regionprops(labeled_image_rs)):
+    for region in regionprops(labeled_image):
         start_x, start_y, end_x, end_y = region.bbox
         # 乘积大于16，排除连通分支较小的块
         if (end_x - start_x) * (end_y - start_y) >= 16:

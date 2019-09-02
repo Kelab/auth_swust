@@ -1,7 +1,8 @@
-from auth_swust import Login
-from auth_swust.log import AUTH_LOGGER
 import logging
 import unittest
+
+from auth_swust import Login
+from auth_swust.log import AUTH_LOGGER
 
 AUTH_LOGGER.setLevel(logging.DEBUG)
 

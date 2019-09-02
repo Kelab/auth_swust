@@ -1,12 +1,12 @@
-import logging
 import sys
+import logging
 from logging.config import dictConfig
 
 LOGGING_CONFIG_DEFAULTS = dict(
     version=1,
     disable_existing_loggers=False,
     loggers={
-        "AuthLogger": {"level": "DEBUG", "handlers": ["console"]},
+        "AUTH_LOGGER": {"level": "INFO", "handlers": ["console"]},
     },
     handlers={
         "console": {
@@ -17,7 +17,7 @@ LOGGING_CONFIG_DEFAULTS = dict(
     },
     formatters={
         "generic": {
-            "format": "%(asctime)s [%(levelname)s] [%(filename)s] [%(funcName)s] > %(message)s",
+            "format": "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] [%(funcName)s] > %(message)s",
             "datefmt": "[%Y-%m-%d %H:%M:%S]",
             "class": "logging.Formatter",
         },
@@ -25,4 +25,4 @@ LOGGING_CONFIG_DEFAULTS = dict(
 )
 dictConfig(LOGGING_CONFIG_DEFAULTS)
 
-AuthLogger = logging.getLogger("AuthLogger")
+AUTH_LOGGER = logging.getLogger("AUTH_LOGGER")
