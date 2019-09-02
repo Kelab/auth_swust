@@ -2,20 +2,23 @@ import time
 
 from bs4 import BeautifulSoup
 
-from .log import AuthLogger
+from .log import AUTH_LOGGER
 
 
-def retry(times=3, second=2):  # 默认重试间隔为0.3秒，重试次数为3次
+def retry(times=3, second=1):  # 默认重试间隔为0.3秒，重试次数为3次
     def decorator(func):
         def wrapper(*args, **kwargs):
             i = 0
-            result = func(*args, **kwargs)
+            result, info = func(*args, **kwargs)
             while not result and i < times:
-                AuthLogger.debug(f"retry {i + 1} times")
+                if info == "AuthFail" or info == "RequestException":
+                    return result, info
+
+                AUTH_LOGGER.debug(f"retry {i + 1} times")
                 time.sleep(second)
                 i += 1
-                result = func(*args, **kwargs)
-            return result
+                result, info = func(*args, **kwargs)
+            return result, info
 
         return wrapper
 

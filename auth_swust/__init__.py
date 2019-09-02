@@ -26,7 +26,7 @@ usage:
    encrypted_pw： xxxxxxx
    <RequestsCookieJar[xxxxx
 """
-from .auth_ import Login
+from .auth import Login
 from .captcha_recognition import predict_captcha
 
 __all__ = ["Login", "predict_captcha"]
