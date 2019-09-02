@@ -20,7 +20,7 @@ class PyTest(TestCommand):
 
 
 setuptools.setup(name="auth_swust",
-                 version="1.1.0",
+                 version="1.1.1",
                  url='https://github.com/BuddingLab/auth_swust',
                  author="BuddingLab",
                  author_email="admin@maxlv.org,",
