@@ -15,7 +15,6 @@ model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.model'))
 # 加载模型
 model = load_model(model_path)
 
-global graph
 graph = tf.get_default_graph()
 label_list = list(string.digits + string.ascii_uppercase)
 
@@ -31,6 +30,7 @@ def decode(pred_array):
 
 def _predict(subimages):
     dataset = np.array(subimages)
+    global graph
     with graph.as_default():
         predicted_word = decode(model.predict(dataset.reshape((4, 1, 32, 32))))
     return predicted_word
