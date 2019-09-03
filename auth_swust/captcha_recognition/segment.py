@@ -62,4 +62,4 @@ def add_padding(img: np.ndarray) -> np.ndarray:
             for y in range(img.shape[1]):
                 square[x + x_start, y + y_start] = img[x, y]
         return square
-    return img
+    return square
