@@ -16,11 +16,6 @@ pip install -r dev/requirements_test.txt
 ```bash
 python setup.py test
 ```
-测试 coverage:
-```bash
-python setup.py test
-coverage html
-```
 
 
 在本地安装

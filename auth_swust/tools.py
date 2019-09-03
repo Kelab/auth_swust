@@ -14,7 +14,7 @@ def retry(times=3, second=1):  # 默认重试间隔为0.3秒，重试次数为3�
                 if info == "AuthFail" or info == "RequestException":
                     return result, info
 
-                AUTH_LOGGER.debug(f"retry {i + 1} times")
+                AUTH_LOGGER.debug(f"登录失败，开始重试第 {i + 1} 次")
                 time.sleep(second)
                 i += 1
                 result, info = func(*args, **kwargs)

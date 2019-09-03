@@ -42,7 +42,7 @@ class Login:
         redirected, url = meta_redirect(response.text)
 
         while redirected:
-            AUTH_LOGGER.debug("get hooks: redirected url:{}".format(url))
+            AUTH_LOGGER.debug("跟随页面重定向:{}".format(url))
             response = self.sess.get(url, **kwargs)
             redirected, url = meta_redirect(response.text)
 
@@ -52,7 +52,7 @@ class Login:
         redirected, url = meta_redirect(response.text)
 
         while redirected:
-            AUTH_LOGGER.debug("post hooks: redirected url:{}".format(url))
+            AUTH_LOGGER.debug("跟随页面重定向:{}".format(url))
             response = self.sess.post(URL.index_url,
                                       data=self.post_data,
                                       **kwargs)
@@ -108,7 +108,7 @@ class Login:
                                                      timeout=3,
                                                      hooks=self.hooks("get"))
 
-        AUTH_LOGGER.debug('get_init_sess')
+        AUTH_LOGGER.debug('初始化')
 
     def get_cap(self):
         _count = 1
@@ -230,6 +230,6 @@ class Login:
         return self.get_cookies()
 
     def add_server_cookie(self):
+        AUTH_LOGGER.debug("正在登录验证常用教务网站。")
         self.sess.get(URL.jwc_auth_url, verify=False, hooks=self.hooks("get"))
         self.sess.get(URL.syk_auth_url, verify=False, hooks=self.hooks("get"))
-        AUTH_LOGGER.debug("正在登录验证常用教务网站。")
