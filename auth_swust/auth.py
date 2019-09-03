@@ -12,9 +12,9 @@ from collections import defaultdict
 
 from .log import AuthLogger
 from .tools import encrypt, retry, meta_redirect
-from .typing import CaptchaFailError, AuthFailError
 from .headers import get_one
 from .constants import URL
+from .exceptions import CaptchaFailError, AuthFailError
 from .captcha_recognition import predict_captcha
 
 
