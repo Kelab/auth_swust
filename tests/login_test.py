@@ -1,6 +1,9 @@
 import unittest
 
 from auth_swust import Login
+from auth_swust.log import AuthLogger, DEBUG
+
+AuthLogger.setLevel(DEBUG)
 
 
 class LoginTestEvent(unittest.TestCase):

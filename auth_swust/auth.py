@@ -10,7 +10,7 @@ from typing import Tuple, Union, Any
 from requests import Response, RequestException
 from collections import defaultdict
 
-from .log import AUTH_LOGGER
+from .log import AuthLogger
 from .tools import encrypt, retry, meta_redirect
 from .typing import CaptchaFailError, AuthFailError
 from .headers import get_one
@@ -42,7 +42,7 @@ class Login:
         redirected, url = meta_redirect(response.text)
 
         while redirected:
-            AUTH_LOGGER.debug("跟随页面重定向:{}".format(url))
+            AuthLogger.debug("跟随页面重定向:{}".format(url))
             response = self.sess.get(url, **kwargs)
             redirected, url = meta_redirect(response.text)
 
@@ -52,7 +52,7 @@ class Login:
         redirected, url = meta_redirect(response.text)
 
         while redirected:
-            AUTH_LOGGER.debug("跟随页面重定向:{}".format(url))
+            AuthLogger.debug("跟随页面重定向:{}".format(url))
             response = self.sess.post(URL.index_url,
                                       data=self.post_data,
                                       **kwargs)
@@ -95,11 +95,13 @@ class Login:
             self.add_server_cookie()
             return self.check_success()
         except AuthFailError:
+            self.sess.close()
             return False, "AuthFail"
         except RequestException:
+            self.sess.close()
             return False, "RequestException"
         except Exception as e:
-            AUTH_LOGGER.debug("Exception: {}".format(e))
+            AuthLogger.debug("Exception: {}".format(e))
             return False, "NormalFail"
 
     def get_init_sess(self):
@@ -108,13 +110,13 @@ class Login:
                                                      timeout=3,
                                                      hooks=self.hooks("get"))
 
-        AUTH_LOGGER.debug('初始化')
+        AuthLogger.debug('初始化')
 
     def get_cap(self):
         _count = 1
         cap_code = None
         while cap_code is None:
-            AUTH_LOGGER.debug('获取验证码图片')
+            AuthLogger.debug('获取验证码图片')
             im = None
             try:
                 cap = self.sess.get(URL.captcha_url,
@@ -130,11 +132,11 @@ class Login:
                 # 返回字符或者 None
                 cap_code = predict_captcha(im)
 
-            AUTH_LOGGER.debug('识别出验证码：{}'.format(cap_code))
+            AuthLogger.debug('识别出验证码：{}'.format(cap_code))
 
             _count = _count + 1
             if _count > 5:
-                AUTH_LOGGER.error('五次获取验证码失败')
+                AuthLogger.error('五次获取验证码失败')
                 raise ValueError("五次获取验证码失败")
 
         self.cap_code = cap_code
@@ -166,7 +168,7 @@ class Login:
         pw_re = self.password[::-1]
         _encrypted_pw = encrypt(modulus, public_exponent)(pw_re)
         self.encrypted_pw = _encrypted_pw
-        AUTH_LOGGER.debug('加密密码：{}'.format(_encrypted_pw))
+        AuthLogger.debug('加密密码：{}'.format(_encrypted_pw))
 
     def get_auth_sess(self):
         post_data = {
@@ -179,8 +181,8 @@ class Login:
         }
         self.post_data = post_data
 
-        AUTH_LOGGER.debug('登录信息: {}'.format(post_data))
-        AUTH_LOGGER.debug('正在发送登录信息...')
+        AuthLogger.debug('登录信息: {}'.format(post_data))
+        AuthLogger.debug('正在发送登录信息...')
         # 登录请求
         resp = self.sess.post(URL.index_url,
                               data=post_data,
@@ -193,13 +195,13 @@ class Login:
             error_info = soup.select_one("#fm1 > ul > li.simLi > p > b")
             if error_info:
                 if error_info.string == "Invalid credentials.":
-                    AUTH_LOGGER.error("用户名或密码错误")
+                    AuthLogger.error("用户名或密码错误")
                     raise AuthFailError()
                 elif error_info.string == "authenticationFailure.CaptchaFailException":
-                    AUTH_LOGGER.debug("当前验证码无效")
+                    AuthLogger.debug("当前验证码无效")
                     raise CaptchaFailError()
                 else:
-                    AUTH_LOGGER.debug("检测到错误: {}".format(error_info.string))
+                    AuthLogger.debug("检测到错误: {}".format(error_info.string))
 
     # 检查是否登陆成功
     def check_success(self):
@@ -215,21 +217,22 @@ class Login:
         try:
             resp.json()
         except Exception:
-            AUTH_LOGGER.debug('登录失败！未获取到个人信息。')
+            AuthLogger.debug('登录失败！未获取到个人信息。')
             raise ValueError("登录失败！未获取到个人信息。")
         else:
             # 没报错就会执行到这儿
-            AUTH_LOGGER.debug('登录成功。')
+            AuthLogger.debug('登录成功。')
+            self.sess.close()
             return True, resp
 
     def get_cookies(self):
         return self.sess.cookies
 
     def get_cookie_jar_obj(self):
-        AUTH_LOGGER.warn("deprecated: 请使用 get_cookies() 方法。")
+        AuthLogger.warn("deprecated: 请使用 get_cookies() 方法。")
         return self.get_cookies()
 
     def add_server_cookie(self):
-        AUTH_LOGGER.debug("正在登录验证常用教务网站。")
+        AuthLogger.debug("正在登录验证常用教务网站。")
         self.sess.get(URL.jwc_auth_url, verify=False, hooks=self.hooks("get"))
         self.sess.get(URL.syk_auth_url, verify=False, hooks=self.hooks("get"))

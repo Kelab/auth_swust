@@ -14,9 +14,9 @@ usage:
    {"success":true,"code":"10000","msg":"成功","sub_code":"SUCCESS"...
 
 ... 或者你可以开启 debug 模式，看看每一步发生了什么:
-   >>> from auth_swust.log import AUTH_LOGGER
+   >>> from auth_swust.log import AuthLogger, DEBUG
    >>> import logging
-   >>> AUTH_LOGGER.setLevel(logging.DEBUG)
+   >>> AuthLogger.setLevel(DEBUG)
    >>> Login("xxxxx", "xxxxxx")
    >>> res, info = login.try_login()
    [2019-09-03 12:14:37] [DEBUG] [auth.py:111] [get_init_sess] > 初始化

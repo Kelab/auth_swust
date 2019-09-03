@@ -1,28 +1,21 @@
 import sys
 import logging
-from logging.config import dictConfig
+from logging import DEBUG
+from logging import ERROR
+from logging import FATAL
+from logging import INFO
+from logging import WARN
 
-LOGGING_CONFIG_DEFAULTS = dict(
-    version=1,
-    disable_existing_loggers=False,
-    loggers={
-        "AUTH_LOGGER": {"level": "INFO", "handlers": ["console"]},
-    },
-    handlers={
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "generic",
-            "stream": sys.stdout,
-        }
-    },
-    formatters={
-        "generic": {
-            "format": "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] [%(funcName)s] > %(message)s",
-            "datefmt": "[%Y-%m-%d %H:%M:%S]",
-            "class": "logging.Formatter",
-        },
-    }
-)
-dictConfig(LOGGING_CONFIG_DEFAULTS)
+AuthLogger = logging.getLogger("AuthLogger")
 
-AUTH_LOGGER = logging.getLogger("AUTH_LOGGER")
+AuthLogger.setLevel(INFO)
+StreamHandler = logging.StreamHandler(sys.stdout)
+
+StreamHandler.setFormatter(
+    logging.Formatter(
+        fmt=
+        "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] [%(funcName)s] > %(message)s",
+        datefmt="[%Y-%m-%d %H:%M:%S]",
+    ))
+
+AuthLogger.addHandler(StreamHandler)
