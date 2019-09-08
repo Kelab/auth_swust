@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image
 from bs4 import BeautifulSoup
 from typing import Tuple, Union, Any
-from requests import Response, RequestException
+from requests import Response, RequestException, ReadTimeout
 from collections import defaultdict
 
 from .log import AuthLogger
@@ -26,6 +26,7 @@ class Login:
     :raises AuthFailError: 用户名或密码错误\n
     :raises CaptchaFailError: 验证码无效
     """
+
     def __init__(self, username, password):
         self.username = username
         self.password = password
@@ -48,23 +49,9 @@ class Login:
 
         return response
 
-    def auth_redirections_hooks(self, response: Response, *args, **kwargs):
-        redirected, url = meta_redirect(response.text)
-
-        while redirected:
-            AuthLogger.debug("跟随页面重定向:{}".format(url))
-            response = self.sess.post(URL.index_url,
-                                      data=self.post_data,
-                                      **kwargs)
-            redirected, url = meta_redirect(response.text)
-
-        return response
-
     def hooks(self, tp="get"):
         if tp == "get":
             return {'response': self.get_redirections_hooks}
-        elif tp == "auth":
-            return {'response': self.auth_redirections_hooks}
         else:
             return {}
 
@@ -97,8 +84,12 @@ class Login:
         except AuthFailError:
             self.sess.close()
             return False, "AuthFail"
-        except RequestException:
-            self.sess.close()
+        except ReadTimeout as e:
+            AuthLogger.debug("ReadTimeout: {}".format(e))
+            self.add_server_cookie()
+            return self.check_success()
+        except RequestException as e:
+            AuthLogger.debug("RequestException: {}".format(e))
             return False, "RequestException"
         except Exception as e:
             AuthLogger.debug("Exception: {}".format(e))
@@ -106,9 +97,12 @@ class Login:
 
     def get_init_sess(self):
         self.sess.headers = get_one()
-        self.init_response: Response = self.sess.get(URL.index_url,
-                                                     timeout=3,
-                                                     hooks=self.hooks("get"))
+        try:
+            self.init_response: Response = self.sess.get(URL.index_url,
+                                                         timeout=3,
+                                                         hooks=self.hooks("get"))
+        except ReadTimeout:
+            raise RequestException
 
         AuthLogger.debug('初始化')
 
@@ -186,10 +180,11 @@ class Login:
         # 登录请求
         resp = self.sess.post(URL.index_url,
                               data=post_data,
-                              timeout=3,
-                              headers={"Content-Language": "zh-CN"},
-                              hooks=self.hooks("auth"))
+                              timeout=5,
+                              )
         soup = BeautifulSoup(resp.text, features="lxml")
+
+        # 获取错误信息
         login_form = soup.select("#fm1")
         if len(login_form) != 0:
             error_info = soup.select_one("#fm1 > ul > li.simLi > p > b")
@@ -218,7 +213,7 @@ class Login:
             resp.json()
         except Exception:
             AuthLogger.debug('登录失败！未获取到个人信息。')
-            raise ValueError("登录失败！未获取到个人信息。")
+            return False, 'NormalFail'
         else:
             # 没报错就会执行到这儿
             AuthLogger.debug('登录成功。')
