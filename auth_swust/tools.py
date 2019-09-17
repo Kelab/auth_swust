@@ -1,7 +1,5 @@
 import time
 
-from bs4 import BeautifulSoup
-
 from .log import AuthLogger
 
 
@@ -41,15 +39,3 @@ def encrypt(public_modulus_hex, public_exponent_hex):
         return '%x' % ciphertext  # return hex representation
 
     return cipher
-
-
-def meta_redirect(content):
-    soup = BeautifulSoup(content, 'lxml')
-
-    result = soup.find("meta", attrs={"http-equiv": "refresh"})
-    if result:
-        wait, text = result["content"].split(";")
-        if text.strip().lower().startswith("url="):
-            url = text[4:]
-            return True, url
-    return False, None

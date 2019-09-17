@@ -1,8 +1,3 @@
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-import requests
-
 from io import BytesIO
 from PIL import Image
 from bs4 import BeautifulSoup
@@ -11,8 +6,8 @@ from requests import Response, RequestException, ReadTimeout
 from collections import defaultdict
 
 from .log import AuthLogger
-from .tools import encrypt, retry, meta_redirect
-from .headers import get_one
+from .tools import encrypt, retry
+from .request import Session
 from .constants import URL
 from .exceptions import CaptchaFailError, AuthFailError
 from .captcha_recognition import predict_captcha
@@ -26,34 +21,17 @@ class Login:
     :raises AuthFailError: 用户名或密码错误\n
     :raises CaptchaFailError: 验证码无效
     """
-
     def __init__(self, username, password):
         self.username = username
         self.password = password
 
-        _sess = requests.Session()
+        _sess = Session()
         self.sess = _sess
 
         self.init_response = None
         self.cap_code = None
         self.post_data = None
         self.hidden_values = defaultdict(str)
-
-    def get_redirections_hooks(self, response: Response, *args, **kwargs):
-        redirected, url = meta_redirect(response.text)
-
-        while redirected:
-            AuthLogger.debug("跟随页面重定向:{}".format(url))
-            response = self.sess.get(url, **kwargs)
-            redirected, url = meta_redirect(response.text)
-
-        return response
-
-    def hooks(self, tp="get"):
-        if tp == "get":
-            return {'response': self.get_redirections_hooks}
-        else:
-            return {}
 
     @retry(times=5, second=1)
     def try_login(self) -> Union[Tuple[bool, str], Tuple[bool, Any]]:
@@ -96,13 +74,11 @@ class Login:
             return False, "NormalFail"
 
     def get_init_sess(self):
-        self.sess.headers = get_one()
         try:
             self.init_response: Response = self.sess.get(URL.index_url,
-                                                         timeout=3,
-                                                         hooks=self.hooks("get"))
+                                                         timeout=8)
         except ReadTimeout:
-            raise RequestException
+            raise RequestException("初始化加载网页信息超时")
 
         AuthLogger.debug('初始化')
 
@@ -110,12 +86,10 @@ class Login:
         _count = 1
         cap_code = None
         while cap_code is None:
-            AuthLogger.debug('获取验证码图片')
+            AuthLogger.debug('正在获取验证码图片...')
             im = None
             try:
-                cap = self.sess.get(URL.captcha_url,
-                                    timeout=3,
-                                    hooks=self.hooks("get"))
+                cap = self.sess.get(URL.captcha_url, timeout=3)
                 imgBuf = BytesIO(cap.content)
                 im: Image.Image = Image.open(imgBuf)
             except Exception:
@@ -162,7 +136,7 @@ class Login:
         pw_re = self.password[::-1]
         _encrypted_pw = encrypt(modulus, public_exponent)(pw_re)
         self.encrypted_pw = _encrypted_pw
-        AuthLogger.debug('加密密码：{}'.format(_encrypted_pw))
+        AuthLogger.debug('获取加密密钥。')
 
     def get_auth_sess(self):
         post_data = {
@@ -178,10 +152,11 @@ class Login:
         AuthLogger.debug('登录信息: {}'.format(post_data))
         AuthLogger.debug('正在发送登录信息...')
         # 登录请求
-        resp = self.sess.post(URL.index_url,
-                              data=post_data,
-                              timeout=5,
-                              )
+        resp = self.sess.post(
+            URL.index_url,
+            data=post_data,
+            timeout=10,
+        )
         soup = BeautifulSoup(resp.text, features="lxml")
 
         # 获取错误信息
@@ -191,10 +166,10 @@ class Login:
             if error_info:
                 if error_info.string == "Invalid credentials.":
                     AuthLogger.error("用户名或密码错误")
-                    raise AuthFailError()
+                    raise AuthFailError("用户名或密码错误")
                 elif error_info.string == "authenticationFailure.CaptchaFailException":
                     AuthLogger.debug("当前验证码无效")
-                    raise CaptchaFailError()
+                    raise CaptchaFailError("验证码无效")
                 else:
                     AuthLogger.debug("检测到错误: {}".format(error_info.string))
 
@@ -203,8 +178,7 @@ class Login:
         # 请求个人信息
         resp: Response = self.sess.get(URL.student_info_url,
                                        verify=False,
-                                       allow_redirects=True,
-                                       hooks=self.hooks("get"))
+                                       allow_redirects=True)
 
         # 试试获取到的是不是 json 数据：
         # 1. 获取到的不是 json 数据的话执行 json() 方法会报错
@@ -229,5 +203,5 @@ class Login:
 
     def add_server_cookie(self):
         AuthLogger.debug("正在登录验证常用教务网站。")
-        self.sess.get(URL.jwc_auth_url, verify=False, hooks=self.hooks("get"))
-        self.sess.get(URL.syk_auth_url, verify=False, hooks=self.hooks("get"))
+        self.sess.get(URL.jwc_auth_url, verify=False)
+        self.sess.get(URL.syk_auth_url, verify=False)
