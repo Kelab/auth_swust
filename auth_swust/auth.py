@@ -149,7 +149,7 @@ class Login:
         resp = self.sess.post(
             URL.index_url,
             data=post_data,
-            timeout=10,
+            timeout=5,
         )
         soup = BeautifulSoup(resp.text, "lxml")
 
