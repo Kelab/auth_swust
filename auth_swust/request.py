@@ -1,13 +1,11 @@
 import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 from bs4 import BeautifulSoup
 from requests import Response
 from requests import Session as _Session
 
 from .log import AuthLogger
-from .headers import get_one
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def meta_redirect(content):
@@ -27,7 +25,6 @@ class Session(_Session):
     def __init__(self, cookies: dict = {}):
         super().__init__()
         self.cookies.update(cookies)
-        self.headers.update(get_one())
 
     def get_redirections_hooks(self, response: Response, *args, **kwargs):
         redirected, url = meta_redirect(response.text)

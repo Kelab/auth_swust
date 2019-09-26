@@ -6,8 +6,8 @@ from PIL import Image
 from pathlib import Path
 from keras.models import load_model
 
-from .img_process import process
 from .segment import segment_image
+from .img_process import process
 
 # 使用绝对路径 设置model的位置
 model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.model'))
@@ -15,7 +15,7 @@ model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.model'))
 # 加载模型
 model = load_model(model_path)
 
-graph = tf.get_default_graph()
+graph = tf.compat.v1.get_default_graph()
 label_list = list(string.digits + string.ascii_uppercase)
 
 

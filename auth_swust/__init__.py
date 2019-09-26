@@ -2,7 +2,7 @@
 auth_swust
 ------------------
 
-使用 Python 写成的模拟登录教务处的包。
+模拟登录教务处。
 usage:
 
    >>> from auth_swust import Login
@@ -15,7 +15,6 @@ usage:
 
 ... 或者你可以开启 debug 模式，看看每一步发生了什么:
    >>> from auth_swust.log import AuthLogger, DEBUG
-   >>> import logging
    >>> AuthLogger.setLevel(DEBUG)
    >>> Login("xxxxx", "xxxxxx")
    >>> res, info = login.try_login()

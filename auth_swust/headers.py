@@ -1,8 +1,8 @@
 import random
 
-__all__ = ["get_one"]
+__all__ = ["get_headers"]
 
-Chrome = [
+ChromeUA = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36",
@@ -30,7 +30,6 @@ Chrome = [
 ]
 
 
-def get_one():
-    one = random.choice(Chrome)
-    header = {'User-Agent': one}
-    return header
+def get_headers():
+    ua = random.choice(ChromeUA)
+    return {'User-Agent': ua}
