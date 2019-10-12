@@ -1,7 +1,7 @@
 beautifulsoup4
-Keras>=2.2.5
 lxml
 Pillow
-tensorflow
 requests
 scikit-image
+torch
+pytest

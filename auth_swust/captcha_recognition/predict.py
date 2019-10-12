@@ -1,39 +1,31 @@
 import string
-import numpy as np
-import tensorflow as tf
 
+import torch
 from PIL import Image
-from pathlib import Path
-from keras.models import load_model
 
-from .segment import segment_image
 from .img_process import process
+from .lenet5 import net
+from .segment import segment_image
 
-# 使用绝对路径 设置model的位置
-model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.model'))
-
-# 加载模型
-model = load_model(model_path)
-
-graph = tf.compat.v1.get_default_graph()
-label_list = list(string.digits + string.ascii_uppercase)
+label_list = string.digits + string.ascii_uppercase
 
 
-def decode(pred_array):
-    # argmax返回array中最大值的位置，也就是概率最大的那个位置
-    predictions = np.argmax(pred_array, axis=1)
-
-    # 将预测的字母拼接起来
-    predicted_word = str.join("", [label_list[pred] for pred in predictions])
-    return predicted_word
+def decode(index):
+    s = string.digits + string.ascii_uppercase
+    return s[index]
 
 
-def _predict(subimages):
-    dataset = np.array(subimages)
-    global graph
-    with graph.as_default():
-        predicted_word = decode(model.predict(dataset.reshape((4, 1, 32, 32))))
-    return predicted_word
+def predict(subimages):
+    t = []
+    all = None
+    s = ""
+    for i, x in enumerate(subimages, 0):
+        t.append(torch.from_numpy(subimages[i]).view(-1, 1, 32, 32).to(torch.float32))
+        if i == 3:
+            all = torch.cat(t)
+    for x in range(4):
+        s += decode(net(all)[x].argmax())
+    return s
 
 
 def predict_captcha(captcha_image: Image.Image):
@@ -52,7 +44,7 @@ def predict_captcha(captcha_image: Image.Image):
         subimages = segment_image(image)
 
     if subimages is not None:
-        return _predict(subimages)
+        return predict(subimages)
 
     # 如果切割图片返回 None 说明没有切割出来 直接不预测
     return None
