@@ -27,9 +27,6 @@ class Login:
         self.username = username
         self.password = password
 
-        self.sess = Session()
-        self.sess.headers = get_headers()
-
         self.init_resp = None
         self.cap_code = None
         self.hidden_values = defaultdict(str)
@@ -49,7 +46,6 @@ class Login:
 
         登录成功 -> 返回 (True, 个人信息); 个人信息是一个 Response 对象
         """
-
         try:
             # 在这些函数内部有 raise 产生错误来中断程序运行
             # 在外层可以捕捉到并进行处理
@@ -71,8 +67,9 @@ class Login:
 
     def init(self):
         try:
-
             AuthLogger.debug('正在初始化...')
+            self.sess = Session()
+            self.sess.headers = get_headers()
             self.init_resp: Response = self.sess.get(URL.index_url, timeout=8)
             self.parse_auth_params()
             self.encrypt_password()

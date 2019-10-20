@@ -11,8 +11,7 @@ label_list = string.digits + string.ascii_uppercase
 
 
 def decode(index):
-    s = string.digits + string.ascii_uppercase
-    return s[index]
+    return label_list[index]
 
 
 def predict(subimages):
@@ -20,7 +19,9 @@ def predict(subimages):
     all = None
     s = ""
     for i, x in enumerate(subimages, 0):
-        t.append(torch.from_numpy(subimages[i]).view(-1, 1, 32, 32).to(torch.float32))
+        t.append(
+            torch.from_numpy(subimages[i]).view(-1, 1, 32,
+                                                32).to(torch.float32))
         if i == 3:
             all = torch.cat(t)
     for x in range(4):

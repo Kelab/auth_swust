@@ -4,6 +4,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# 使用绝对路径 设置model的位置
+model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.pth'))
+
+state_dict = torch.load(model_path)
+net = LeNet5()
+net.eval()
+net.load_state_dict(state_dict)
+
+
 class LeNet5(nn.Module):
     def __init__(self):
         super(LeNet5, self).__init__()
@@ -32,10 +41,3 @@ class LeNet5(nn.Module):
         for s in size:
             num_features *= s
         return num_features
-# 使用绝对路径 设置model的位置
-model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.pth'))
-
-state_dict = torch.load(model_path)
-net = LeNet5()
-net.eval()
-net.load_state_dict(state_dict)

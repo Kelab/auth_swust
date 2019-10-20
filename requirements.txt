@@ -3,5 +3,5 @@ lxml
 Pillow
 requests
 scikit-image
-torch
+torch===1.3.0 -f https://download.pytorch.org/whl/torch_stable.html
 pytest
