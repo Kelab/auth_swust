@@ -6,6 +6,9 @@
 本代码仅用于学习，他人可使用，但开发者不承担任何责任。
 请勿用于商业及违法用途。
 
+## 安装 pytorch
+参考 https://pytorch.org/get-started/locally/
+
 
 ## 须知
 开发前安装依赖
