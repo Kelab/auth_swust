@@ -2,10 +2,19 @@ import string
 
 import torch
 from PIL import Image
+from pathlib import Path
 
 from .img_process import process
-from .lenet5 import net
+from .lenet5 import LeNet5
 from .segment import segment_image
+
+# 使用绝对路径 设置model的位置
+model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.pth'))
+
+state_dict = torch.load(model_path)
+net = LeNet5()
+net.eval()
+net.load_state_dict(state_dict)
 
 label_list = string.digits + string.ascii_uppercase
 
