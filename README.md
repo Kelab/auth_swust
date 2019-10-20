@@ -2,6 +2,11 @@
 
 [![buddy pipeline](https://app.buddy.works/lengthmin/auth-swust/pipelines/pipeline/200365/badge.svg?token=b95b1aaea6d2d999f474a4b079f0ff2387e8767cc05e207fdf9039d3fab80695 "buddy pipeline")](https://app.buddy.works/lengthmin/auth-swust/pipelines/pipeline/200365)
 
+## 免责声明
+本代码仅用于学习，他人可使用，但开发者不承担任何责任。
+请勿用于商业及违法用途。
+
+
 ## 须知
 开发前安装依赖
 ```bash
