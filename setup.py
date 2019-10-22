@@ -20,7 +20,7 @@ class PyTest(TestCommand):
 
 
 setuptools.setup(name="auth_swust",
-                 version="1.2.7",
+                 version="1.2.8",
                  url='https://github.com/BuddingLab/auth_swust',
                  author="BuddingLab",
                  author_email="admin@maxlv.org,",
@@ -34,5 +34,8 @@ setuptools.setup(name="auth_swust",
                      "Operating System :: OS Independent",
                  ],
                  package_data={
-                     'auth_swust': ['captcha_recognition/model/*.pth'],
+                     'auth_swust': [
+                         'captcha_recognition/model/*.pth',
+                         'captcha_recognition/model/*.model'
+                     ],
                  })
