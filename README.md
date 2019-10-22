@@ -7,6 +7,7 @@
 请勿用于商业及违法用途。
 
 ## 安装 pytorch
+如果 pip 安装 pytorch 出错，请查看官方帮助文档。  
 参考 https://pytorch.org/get-started/locally/
 
 
