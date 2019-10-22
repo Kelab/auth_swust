@@ -7,12 +7,22 @@ def retry(times=3, second=1):  # 默认重试间隔为0.3秒，重试次数为3�
     def decorator(func):
         def wrapper(*args, **kwargs):
             i = 0
+            # 设置密码错误重试次数
+            auth_fail_count = 0
             result, info = func(*args, **kwargs)
             while not result and i < times:
                 AuthLogger.debug(f"登录失败，开始重试第 {i + 1} 次")
                 time.sleep(second)
+
+                if result is False and info == "AuthFail":
+                    auth_fail_count = auth_fail_count + 1
+                    if auth_fail_count > 2:
+                        # 如果重试密码错误两次，就返回密码错误
+                        return result, info
+
                 i += 1
                 result, info = func(*args, **kwargs)
+
             return result, info
 
         return wrapper
