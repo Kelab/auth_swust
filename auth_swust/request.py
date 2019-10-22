@@ -23,7 +23,7 @@ def meta_redirect(content):
 
 class Session(_Session):
     def __init__(self, cookies: dict = {}):
-        super().__init__()
+        super(Session, self).__init__()
         self.cookies.update(cookies)
 
     def get_redirections_hooks(self, response: Response, *args, **kwargs):
@@ -37,10 +37,8 @@ class Session(_Session):
 
     def get(self, url, **kwargs):
         kwargs.setdefault('allow_redirects', True)
-        if 'swust' in url:
-            kwargs.setdefault('hooks',
-                              {'response': self.get_redirections_hooks})
-        return self.request(
+        kwargs.setdefault('hooks', {'response': self.get_redirections_hooks})
+        return super(Session, self).request(
             'GET',
             url,
             **kwargs,

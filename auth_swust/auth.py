@@ -1,3 +1,5 @@
+import re
+
 from io import BytesIO
 from PIL import Image
 from bs4 import BeautifulSoup
@@ -97,10 +99,10 @@ class Login:
             _count = _count + 1
 
         if cap_code:
-            AuthLogger.debug('✔ 识别验证码成功')
+            AuthLogger.debug('✔ 识别验证码')
             self.cap_code = cap_code
         else:
-            raise ValueError("获取验证码失败")
+            raise ValueError("识别验证码失败")
 
     def parse_auth_params(self):
         """
@@ -191,4 +193,16 @@ class Login:
     def add_common_website_cookies(self):
         AuthLogger.debug("正在登录验证常用教务网站。")
         self.sess.get(URL.jwc_auth_url, verify=False)
-        self.sess.get(URL.syk_auth_url, verify=False)
+
+        verify = self.sess.get(URL.syk_auth_url, verify=False)
+        soup = BeautifulSoup(verify.text, "lxml")
+        script = soup.find("script")
+        if script:
+            string = script.string
+            c = re.compile(r"window\.location='(.+)';")
+            location = c.match(string)
+            verify_href = location.group(1)
+            self.sess.get(URL.syk_base_url + verify_href)
+            self.sess.get(URL.syk_base_url + "/StuExpbook/login.jsp")
+        else:
+            AuthLogger.error("登录实验课表失败：{}".format(str(soup)))
