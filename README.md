@@ -7,8 +7,21 @@
 请勿用于商业及违法用途。
 
 ## 安装 pytorch
+项目默认使用的是 pytorch。  
+你需要安装 pytorch >= 1.2.0。  
 如果 pip 安装 pytorch 出错，请查看官方帮助文档。  
 参考 https://pytorch.org/get-started/locally/
+
+## 安装 keras 和 tensorflow
+你需要安装 keras >= 2.2.5。  
+通过定义环境变量 `CAPTCHA_BACKEND` 来覆盖默认后端：
+
+```bash
+CAPTCHA_BACKEND=keras python xxxxxx
+# 或者
+import os
+os.environ['CAPTCHA_BACKEND'] = "keras"
+```
 
 
 ## 须知

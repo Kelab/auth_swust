@@ -1,41 +1,20 @@
-import string
+import os
+import sys
 
-import torch
 from PIL import Image
-from pathlib import Path
 
 from .img_process import process
-from .lenet5 import LeNet5
 from .segment import segment_image
 
-# 使用绝对路径 设置model的位置
-model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.pth'))
+_BACKEND = 'pytorch'
+_BACKEND = os.environ.get('CAPTCHA_BACKEND', _BACKEND)
 
-state_dict = torch.load(model_path)
-net = LeNet5()
-net.eval()
-net.load_state_dict(state_dict)
-
-label_list = string.digits + string.ascii_uppercase
-
-
-def decode(index):
-    return label_list[index]
-
-
-def predict(subimages):
-    t = []
-    all = None
-    s = ""
-    for i, x in enumerate(subimages, 0):
-        t.append(
-            torch.from_numpy(subimages[i]).view(-1, 1, 32,
-                                                32).to(torch.float32))
-        if i == 3:
-            all = torch.cat(t)
-    for x in range(4):
-        s += decode(net(all)[x].argmax())
-    return s
+if _BACKEND == 'keras':
+    sys.stderr.write('使用 Keras 进行验证码识别。\n')
+    from .keras_backend import _predict
+else:
+    sys.stderr.write('使用 Pytorch 进行验证码识别。\n')
+    from .torch_backend import _predict
 
 
 def predict_captcha(captcha_image: Image.Image):
@@ -54,7 +33,7 @@ def predict_captcha(captcha_image: Image.Image):
         subimages = segment_image(image)
 
     if subimages is not None:
-        return predict(subimages)
+        return _predict(subimages)
 
     # 如果切割图片返回 None 说明没有切割出来 直接不预测
     return None
