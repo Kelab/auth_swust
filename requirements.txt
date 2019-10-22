@@ -3,5 +3,4 @@ lxml
 Pillow
 requests
 scikit-image
-torch===1.3.0
 pytest
