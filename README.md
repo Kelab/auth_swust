@@ -6,13 +6,17 @@
 本代码仅用于学习，他人可使用，但开发者不承担任何责任。
 请勿用于商业及违法用途。
 
-## 安装 pytorch
+## 安装深度学习框架
+使用深度学习自动识别验证码，包内自带两个模型，一个 keras 一个 pytorch 的。用户可以选用安装。
+pytorch 包比较大，机器内存小的可能安不上，这时候就可以用 keras。
+
+### 安装 pytorch
 项目默认使用的是 pytorch。  
 你需要安装 pytorch >= 1.2.0。  
 如果 pip 安装 pytorch 出错，请查看官方帮助文档。  
 参考 https://pytorch.org/get-started/locally/
 
-## 安装 keras 和 tensorflow
+### 安装 keras 和 tensorflow
 你需要安装 keras >= 2.2.5。  
 通过定义环境变量 `CAPTCHA_BACKEND` 来覆盖默认后端：
 
