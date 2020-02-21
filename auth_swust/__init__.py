@@ -14,8 +14,10 @@ usage:
    {"success":true,"code":"10000","msg":"成功","sub_code":"SUCCESS"...
 
 ... 或者你可以开启 debug 模式，看看每一步发生了什么:
-   >>> from auth_swust.log import AuthLogger, DEBUG
-   >>> AuthLogger.setLevel(DEBUG)
+   >>> import sys
+   >>> from loguru import logger
+   >>> logger.remove()
+   >>> logger.add(sys.stdout, level="DEBUG")
    >>> Login("xxxxx", "xxxxxx")
    >>> res, info = login.try_login()
    [2019-09-03 12:14:37] [DEBUG] [auth.py:111] [get_init_sess] > 初始化
@@ -23,7 +25,15 @@ usage:
    [2019-09-03 12:14:37] [DEBUG] [auth.py:133] [get_cap] > 识别出验证码：RQDW
    ...
 """
+import sys
+
 from .auth import Login
 from .captcha_recognition import predict_captcha
 from . import request
-__all__ = ["Login", "predict_captcha", "request"]
+from loguru import logger
+
+logger.remove()
+default_logger = logger.add(sys.stdout, level="INFO")
+
+
+__all__ = ["Login", "predict_captcha", "request", "default_logger"]

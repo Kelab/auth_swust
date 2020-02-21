@@ -1,6 +1,6 @@
 import time
 
-from .log import AuthLogger
+from loguru import logger
 
 
 def retry(times=3, second=1):  # 默认重试间隔为0.3秒，重试次数为3次
@@ -11,7 +11,7 @@ def retry(times=3, second=1):  # 默认重试间隔为0.3秒，重试次数为3�
             auth_fail_count = 0
             result, info = func(*args, **kwargs)
             while not result and i < times:
-                AuthLogger.debug(f"登录失败，开始重试第 {i + 1} 次")
+                logger.debug(f"登录失败，开始重试第 {i + 1} 次")
                 time.sleep(second)
 
                 if result is False and info == "AuthFail":
@@ -42,6 +42,6 @@ def encrypt(public_modulus_hex, public_exponent_hex):
         # Beware, plaintext must be short enough to fit in a single block!
         plaintext = int(text[::-1].encode("utf-8").hex(), 16)
         ciphertext = pow(plaintext, public_exponent, public_modulus)
-        return '%x' % ciphertext  # return hex representation
+        return "%x" % ciphertext  # return hex representation
 
     return cipher

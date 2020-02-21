@@ -4,3 +4,4 @@ Pillow
 requests
 scikit-image
 pytest
+loguru

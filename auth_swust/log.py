@@ -5,17 +5,7 @@ from logging import ERROR
 from logging import FATAL
 from logging import INFO
 from logging import WARN
+from loguru import logger
 
 AuthLogger = logging.getLogger("AuthLogger")
-
-AuthLogger.setLevel(INFO)
-StreamHandler = logging.StreamHandler(sys.stdout)
-
-StreamHandler.setFormatter(
-    logging.Formatter(
-        fmt=
-        "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] [%(funcName)s] > %(message)s",
-        datefmt="[%Y-%m-%d %H:%M:%S]",
-    ))
-
-AuthLogger.addHandler(StreamHandler)
+logger.error("deprecated: 请使用 loguru 设置 log 等级.")

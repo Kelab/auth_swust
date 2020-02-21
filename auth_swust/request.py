@@ -3,13 +3,13 @@ from bs4 import BeautifulSoup
 from requests import Response
 from requests import Session as _Session
 
-from .log import AuthLogger
+from loguru import logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def meta_redirect(content):
-    soup = BeautifulSoup(content, 'lxml')
+    soup = BeautifulSoup(content, "lxml")
 
     result = soup.find("meta", attrs={"http-equiv": "refresh"})
     if result:
@@ -29,17 +29,13 @@ class Session(_Session):
     def get_redirections_hooks(self, response: Response, *args, **kwargs):
         redirected, url = meta_redirect(response.text)
         while redirected:
-            AuthLogger.debug("跟随页面重定向:{}".format(url))
+            logger.debug("跟随页面重定向:{}".format(url))
             response = self.get(url, hooks={}, **kwargs)
             redirected, url = meta_redirect(response.text)
 
         return response
 
     def get(self, url, **kwargs):
-        kwargs.setdefault('allow_redirects', True)
-        kwargs.setdefault('hooks', {'response': self.get_redirections_hooks})
-        return super(Session, self).request(
-            'GET',
-            url,
-            **kwargs,
-        )
+        kwargs.setdefault("allow_redirects", True)
+        kwargs.setdefault("hooks", {"response": self.get_redirections_hooks})
+        return super(Session, self).request("GET", url, **kwargs)
