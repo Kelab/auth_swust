@@ -14,6 +14,34 @@ def segment_image(image_array: np.ndarray, origin_image: Image.Image = None):
     return None
 
 
+def segment_image_by_projection(image_array: np.ndarray) -> np.ndarray:
+    """
+    通过投影法来切割
+    """
+    h, w = image_array.shape
+
+    arr = [0] * w
+    img_back = image_array.copy()
+    for i in range(w):
+        for j in range(h):
+            arr[i] = arr[i] + img_back[j, i]
+    thres = 1
+    desc = False
+    result_array = []
+    for idx, num in enumerate(arr):
+        if desc:
+            if num < thres:
+                result_array.append(idx)
+                desc = not desc
+        else:
+            if num >= thres:
+                result_array.append(idx)
+                desc = not desc
+    if len(result_array) == 8:
+        raise NotImplementedError
+    raise NotImplementedError
+
+
 def segment_image_by_region(image_array: np.ndarray) -> np.ndarray:
     """
     通过连通分支来切割，对各个字符比较分离的验证码比较好切割
@@ -22,9 +50,7 @@ def segment_image_by_region(image_array: np.ndarray) -> np.ndarray:
     image = image_array.transpose()
     # 我们要做的第一件事就是检测每个字母的位置，这就要用到`scikit-image`的`label`函数，它能找出图像中像素值相同且又连接在一起的像素块。这有点像连通分支。`label`函数的参数为图像数组，返回跟输入同型的数组。在返回的数组中，图像**连接在一起的区域**用不同的值来表示，在这些区域以外的像素用0来表示。
     labeled_image: np.ndarray = label(image, connectivity=2)
-    labeled_image = remove_small_objects(labeled_image,
-                                         min_size=30,
-                                         connectivity=2)
+    labeled_image = remove_small_objects(labeled_image, min_size=30, connectivity=2)
 
     # 抽取每一张小图像，将它们保存到这个列表中。
     subimages = []

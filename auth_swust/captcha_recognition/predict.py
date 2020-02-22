@@ -2,18 +2,19 @@ import os
 import sys
 
 from PIL import Image
+from loguru import logger
 
 from .img_process import process
 from .segment import segment_image
 
-_BACKEND = 'pytorch'
-_BACKEND = os.environ.get('CAPTCHA_BACKEND', _BACKEND)
+_BACKEND = "pytorch"
+_BACKEND = os.environ.get("CAPTCHA_BACKEND", _BACKEND)
 
-if _BACKEND == 'keras':
-    sys.stderr.write('使用 Keras 进行验证码识别。\n')
+if _BACKEND == "keras":
+    logger.info("使用 Keras 进行验证码识别。")
     from .keras_backend import _predict
 else:
-    sys.stderr.write('使用 Pytorch 进行验证码识别。\n')
+    logger.info("使用 Pytorch 进行验证码识别。")
     from .torch_backend import _predict
 
 
@@ -25,12 +26,6 @@ def predict_captcha(captcha_image: Image.Image):
     # segment_iamge 抽取小图像，降噪指数默认 2
     image = process(captcha_image)
     subimages = segment_image(image)
-
-    # 第一遍没抽取出来四张，再来第二遍
-    if subimages is None:
-        # segment_iamge 抽取小图像  降噪指数 3
-        image = process(captcha_image, 3)
-        subimages = segment_image(image)
 
     if subimages is not None:
         return _predict(subimages)
