@@ -37,7 +37,7 @@ class LeNet5(nn.Module):
 
 
 # 使用绝对路径 设置model的位置
-model_path = str(Path(__file__).parent.joinpath('model', 'captcha_cnn.pth'))
+model_path = str(Path(__file__).parent.joinpath("model", "captcha_cnn.pth"))
 
 state_dict = torch.load(model_path)
 net = LeNet5()
@@ -56,9 +56,7 @@ def _predict(subimages):
     all = None
     s = ""
     for i, x in enumerate(subimages, 0):
-        t.append(
-            torch.from_numpy(subimages[i]).view(-1, 1, 32,
-                                                32).to(torch.float32))
+        t.append(torch.from_numpy(subimages[i]).view(-1, 1, 32, 32).to(torch.float32))
         if i == 3:
             all = torch.cat(t)
     for x in range(4):

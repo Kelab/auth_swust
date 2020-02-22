@@ -6,7 +6,7 @@ from pathlib import Path
 from keras.models import load_model
 
 # 使用绝对路径 设置model的位置
-model_path = str(Path(__file__).parent.joinpath('model', 'keras_cnn.model'))
+model_path = str(Path(__file__).parent.joinpath("model", "keras_cnn.model"))
 
 # 加载模型
 model = load_model(model_path)
