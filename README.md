@@ -8,51 +8,42 @@
 
 ## 开始使用
 
-首先需要安装：
+安装：
 
 ```bash
 pip install auth-swust
 ```
 
-```python
-from auth_swust import Login
-login = Login("xxxxxx", "xxxxxxx")
-res, info = login.try_login()
-... # 使用上面的返回值进行下一步的处理
-```
+注意，在你开始使用之前，需要安装需要的两个[深度学习框架](https://github.com/BuddingLab/auth_swust/wiki/%E9%80%89%E6%8B%A9%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A1%86%E6%9E%B6)**之一**！
 
-### 选择深度学习框架
+注意，在你开始使用之前，需要安装需要的两个[深度学习框架](https://github.com/BuddingLab/auth_swust/wiki/%E9%80%89%E6%8B%A9%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A1%86%E6%9E%B6)**之一**！
 
-本项目使用深度学习自动识别验证码，包内带了两个不同框架的模型，一个 keras，一个 pytorch 的。用户可以选用框架安装。
+注意，在你开始使用之前，需要安装需要的两个[深度学习框架](https://github.com/BuddingLab/auth_swust/wiki/%E9%80%89%E6%8B%A9%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A1%86%E6%9E%B6)**之一**！
 
-**TIPS: pytorch 包比较大，机器内存小的可能安不上，这时候就可以用 keras。**
-
-#### 使用 pytorch 框架
-
-项目默认使用的是 pytorch。  
-你需要安装 pytorch >= 1.2.0。  
-如果 pip 安装 pytorch 出错，请查看官方帮助文档。  
-参考 <https://pytorch.org/get-started/locally/>
-
-#### 使用 keras 框架
-
-你需要安装 keras >= 2.2.5 和 tensorflow。  
-你还需要定义环境变量 `CAPTCHA_BACKEND` 为 `keras` 来设置使用。如：  
-
-可以通过设置环境变量：
-
-```bash
-CAPTCHA_BACKEND=keras
-```
-
-或者通过 `os` 修改环境变量：
+在你的项目中引入包：
 
 ```python
 import os
+import sys
+
+# 设置验证码识别框架 需要先安装 keras, tensorflow
 os.environ['CAPTCHA_BACKEND'] = "keras"
-from auth_swust import Login
+from loguru import logger
+from auth_swust import Login, default_logger
+
+# 设置 log 等级
+logger.remove(default_logger)
+logger.add(sys.stdout, level="DEBUG")
+
 login = Login("xxxxxx", "xxxxxxx")
+res, info = login.try_login()
+# 使用上面的返回值进行下一步的处理
+# 具体返回值类型可以查看代码 try_login 的注释
 ```
+
+如果你想设置 log 等级，请查看: [设置 LOG](https://github.com/BuddingLab/auth_swust/wiki/%E8%AE%BE%E7%BD%AE-LOG)
+
+[FAQ点我点我](https://github.com/BuddingLab/auth_swust/wiki/FAQ)
 
 ## 开发须知
 
@@ -71,7 +62,7 @@ pip install -r dev/requirements_test.txt
 测试：
 
 ```bash
-python setup.py test
+pytest
 ```
 
 在本地安装
@@ -83,8 +74,5 @@ python setup.py install
 生成包:
 
 ```bash
-# 按照不同系统生成
-python setup.py bdist
-# 生成 wheel 包
-python setup.py bdist_wheel
+python setup.py sdist bdist_wheel
 ```

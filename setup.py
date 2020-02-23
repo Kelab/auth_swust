@@ -1,6 +1,13 @@
 import sys
+import pathlib
 import setuptools
 from setuptools.command.test import test as TestCommand
+
+HERE = pathlib.Path(__file__).parent
+
+with open(HERE / "README.md", encoding="utf-8") as f:
+    README = f.read()
+
 
 with open("requirements.txt") as f:
     install_requires = [line for line in f if line and line[0] not in "#-"]
@@ -27,6 +34,8 @@ setuptools.setup(
     author="BuddingLab",
     author_email="admin@maxlv.org,",
     description="auth_swust",
+    long_description=README,
+    long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
     classifiers=[
