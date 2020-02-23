@@ -1,19 +1,18 @@
 import re
-
+from collections import defaultdict
 from io import BytesIO
-from PIL import Image
+from typing import Any, Tuple, Union
+
 from bs4 import BeautifulSoup
 from loguru import logger
-from typing import Tuple, Union, Any
-from requests import Response, RequestException, ReadTimeout
-from collections import defaultdict
+from PIL import Image
+from requests import ReadTimeout, RequestException, Response
 
-from .tools import encrypt, retry
-from .request import Session
-from .headers import get_headers
-from .constants import URL
-from .exceptions import CaptchaFailError, AuthFailError
 from .captcha_recognition import predict_captcha
+from .constants import URL
+from .exceptions import AuthFailError, CaptchaFailError
+from .helpers.request import get_random_ua, Session
+from .helpers.utils import encrypt, retry
 
 
 class Login:
@@ -34,7 +33,7 @@ class Login:
         self.cap_code = None
         self.hidden_values = defaultdict(str)
 
-    @retry(times=5, second=1)
+    @retry(times=5, second=0.3)
     def try_login(self) -> Union[Tuple[bool, str], Tuple[bool, Any]]:
         """尝试登录
         因为装饰器的缘故，真正的返回内容在装饰器中：。
@@ -72,7 +71,7 @@ class Login:
         try:
             logger.debug("正在初始化...")
             self.sess = Session()
-            self.sess.headers = get_headers()
+            self.sess.headers = get_random_ua()
             self.init_resp: Response = self.sess.get(URL.index_url, timeout=8)
             self.parse_auth_params()
             self.encrypt_password()

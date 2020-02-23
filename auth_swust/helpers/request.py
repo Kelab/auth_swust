@@ -1,6 +1,12 @@
 import random
 
-__all__ = ["get_headers"]
+import urllib3
+from bs4 import BeautifulSoup
+from loguru import logger
+from requests import Response
+from requests import Session as _Session
+
+__all__ = ["get_random_ua", "meta_redirect", "Session"]
 
 ChromeUA = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
@@ -30,6 +36,42 @@ ChromeUA = [
 ]
 
 
-def get_headers():
+def get_random_ua():
     ua = random.choice(ChromeUA)
     return {"User-Agent": ua}
+
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def meta_redirect(content):
+    soup = BeautifulSoup(content, "lxml")
+
+    result = soup.find("meta", attrs={"http-equiv": "refresh"})
+    if result:
+        wait, text = result["content"].split(";")
+        text = text.strip()
+        if text.lower().startswith("url="):
+            url = text[4:]
+            return True, url
+    return False, None
+
+
+class Session(_Session):
+    def __init__(self, cookies: dict = {}):
+        super(Session, self).__init__()
+        self.cookies.update(cookies)
+
+    def get_redirections_hooks(self, response: Response, *args, **kwargs):
+        redirected, url = meta_redirect(response.text)
+        while redirected:
+            logger.debug("跟随页面重定向:{}".format(url))
+            response = self.get(url, hooks={}, **kwargs)
+            redirected, url = meta_redirect(response.text)
+
+        return response
+
+    def get(self, url, **kwargs):
+        kwargs.setdefault("allow_redirects", True)
+        kwargs.setdefault("hooks", {"response": self.get_redirections_hooks})
+        return super(Session, self).request("GET", url, **kwargs)

@@ -2,7 +2,7 @@
 auth_swust
 ------------------
 
-模拟登录教务处。
+模拟登录西南科技大学教务处。
 usage:
 
    >>> from auth_swust import Login
@@ -29,7 +29,7 @@ import sys
 
 from .auth import Login
 from .captcha_recognition import predict_captcha
-from . import request
+from .helpers import request
 from loguru import logger
 
 logger.remove()
