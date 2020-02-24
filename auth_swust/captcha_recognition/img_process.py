@@ -50,7 +50,7 @@ def pre_binarization(image: Image.Image) -> np.ndarray:
     image_array: np.ndarray = np.array(image)
     for i in range(2):
         image_array = enhance(image_array)
-        image_array = filters.median(image_array, disk(1))
+        image_array = filters.median(image_array, disk(1), behavior="ndimage")
 
     return image_array
 
