@@ -1,4 +1,3 @@
-import unittest
 from pathlib import Path
 
 from auth_swust import predict_captcha
@@ -8,7 +7,7 @@ from PIL import Image
 captcha_folder = Path(__file__).parent.joinpath("assets", "captcha")
 
 
-class CaptchaTestEvent(unittest.TestCase):
+class TestCaptcha:
     def test_captcha1(self):
         captcha_path = str(captcha_folder.joinpath("1DXH.jpg"))
         img = Image.open(captcha_path)
