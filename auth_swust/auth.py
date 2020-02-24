@@ -70,8 +70,10 @@ class Login:
     def init(self):
         try:
             logger.debug("正在初始化...")
-            self.sess = Session()
-            self.sess.headers = get_random_ua()
+            sess = Session()
+            sess.headers = get_random_ua()
+            sess.verify = False
+            self.sess = sess
             self.init_resp: Response = self.sess.get(URL.index_url, timeout=8)
             self.parse_auth_params()
             self.encrypt_password()
@@ -161,9 +163,7 @@ class Login:
     # 检查是否登陆成功
     def check_success(self):
         # 请求个人信息 expect: json格式的个人信息
-        resp: Response = self.sess.get(
-            URL.student_info_url, verify=False, allow_redirects=True
-        )
+        resp: Response = self.sess.get(URL.student_info_url, allow_redirects=True)
 
         # 试试获取到的是不是 json 数据：
         # 1. 获取到的不是 json 数据的话执行 json() 方法会报错
@@ -188,9 +188,9 @@ class Login:
 
     def add_common_website_cookies(self):
         logger.debug("正在登录验证常用教务网站。")
-        self.sess.get(URL.jwc_auth_url, verify=False)
+        self.sess.get(URL.jwc_auth_url)
 
-        verify = self.sess.get(URL.syk_auth_url, verify=False)
+        verify = self.sess.get(URL.syk_auth_url)
         soup = BeautifulSoup(verify.text, "lxml")
         script = soup.find("script")
         if script:

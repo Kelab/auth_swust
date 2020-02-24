@@ -6,6 +6,8 @@ from loguru import logger
 from requests import Response
 from requests import Session as _Session
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 __all__ = ["get_random_ua", "meta_redirect", "Session"]
 
 ChromeUA = [
@@ -39,9 +41,6 @@ ChromeUA = [
 def get_random_ua():
     ua = random.choice(ChromeUA)
     return {"User-Agent": ua}
-
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def meta_redirect(content):

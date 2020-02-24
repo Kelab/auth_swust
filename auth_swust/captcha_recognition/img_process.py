@@ -46,7 +46,6 @@ def pre_binarization(image: Image.Image) -> np.ndarray:
             if x < 17 or y < 9 or h - y < 3:
                 image.putpixel((x, y), (255, 255, 255))
     # 转为 灰度图
-    # L = R 的值 x 299/1000 + G 的值 x 587/1000+ B 的值 x 114/1000
     image = image.convert("L")
     image_array: np.ndarray = np.array(image)
     for i in range(2):
