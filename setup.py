@@ -13,7 +13,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="auth_swust",
-    version="1.3.1",
+    version="1.3.2",
     url="https://github.com/BuddingLab/auth_swust",
     author="BuddingLab",
     author_email="admin@maxlv.org,",
