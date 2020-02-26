@@ -59,7 +59,7 @@ class Login:
             logger.error("❌ 请求超时: {}".format(e))
             return self.check_success()
         except RequestException as e:
-            logger.error("❌ 请求错误，可能是教务处的网站错误或者是本地网络的问题。: {}".format(e))
+            logger.error("❌ 网络错误，可能是教务处的网站错误或者是本地网络的问题。: {}".format(e))
             return False, "RequestException"
         except Exception as e:
             logger.error("❌ 捕获到异常: {}".format(e))
@@ -201,4 +201,4 @@ class Login:
             self.sess.get(URL.syk_base_url + verify_href)
             self.sess.get(URL.syk_base_url + "/StuExpbook/login.jsp")
         else:
-            logger.error("登录实验课表失败：{}".format(str(soup)))
+            logger.error("登录实验课网站失败：{}".format(str(soup)))

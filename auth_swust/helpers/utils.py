@@ -28,7 +28,7 @@ def retry(times: int = 3, second: int = 1):
             auth_fail_count = 0
             result, info = func(*args, **kwargs)
             while not result and i < times:
-                logger.debug(f"登录失败，开始重试第 {i + 1} 次")
+                logger.info(f"登录失败，重试第 {i + 1} 次")
                 time.sleep(second)
 
                 if result is False and info == "AuthFail":
