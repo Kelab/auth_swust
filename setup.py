@@ -13,7 +13,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="auth_swust",
-    version="1.3.2",
+    version="1.4.0",
     url="https://github.com/BuddingLab/auth_swust",
     author="BuddingLab",
     author_email="admin@maxlv.org,",
@@ -28,5 +28,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    package_data={"auth_swust": ["captcha_recognition/model/*"]},
+    package_data={
+        "auth_swust": ["captcha_recognition/model/**/*", "captcha_recognition/model/*"]
+    },
 )
