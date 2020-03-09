@@ -3,16 +3,21 @@ import numpy as np
 import tensorflow as tf
 
 from pathlib import Path
-from keras.models import load_model
+from keras.models import model_from_yaml
 
 # 使用绝对路径 设置model的位置
-model_path = str(Path(__file__).parent.joinpath("model", "keras_cnn.model"))
-
+weight_path = str(
+    Path(__file__).parent.joinpath("model", "keras_cnn", "keras_cnn.weight")
+)
+model_path = str(Path(__file__).parent.joinpath("model", "keras_cnn", "keras_cnn.yml"))
 # 加载模型
-model = load_model(model_path)
+with open(model_path) as f:
+    model = model_from_yaml(f.read())
+    model.load_weights(weight_path)
 
 graph = tf.compat.v1.get_default_graph()
-label_list = list(string.digits + string.ascii_uppercase)
+
+label_list = list(string.ascii_uppercase + string.digits)
 
 
 def decode(pred_array):
