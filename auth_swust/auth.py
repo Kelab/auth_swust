@@ -154,10 +154,10 @@ class Login:
         error_info = soup.select_one("#fm1 > ul > li.simLi > p > b")
         if error_info:
             if error_info.string == "Invalid credentials.":
-                logger.error("用户名或密码错误")
+                logger.error("❌ 用户名或密码错误")
                 raise AuthFailError("用户名或密码错误")
             elif error_info.string == "authenticationFailure.CaptchaFailException":
-                logger.error("验证码无效")
+                logger.error("❌ 验证码无效")
                 raise CaptchaFailError("验证码无效")
 
     # 检查是否登陆成功
@@ -171,7 +171,7 @@ class Login:
         try:
             resp.json()
         except Exception:
-            logger.error("登录失败！未获取到个人信息。")
+            logger.error("❌ 登录失败！未获取到个人信息。")
             return False, "NormalFail"
         else:
             logger.info("登录成功。")
@@ -188,17 +188,22 @@ class Login:
 
     def add_common_website_cookies(self):
         logger.debug("正在登录验证常用教务网站。")
-        self.sess.get(URL.jwc_auth_url)
+        try:
+            self.sess.get(URL.jwc_auth_url)
 
-        verify = self.sess.get(URL.syk_auth_url)
-        soup = BeautifulSoup(verify.text, "lxml")
-        script = soup.find("script")
-        if script:
-            string = script.string
-            c = re.compile(r"window\.location='(.+)';")
-            location = c.match(string)
-            verify_href = location.group(1)
-            self.sess.get(URL.syk_base_url + verify_href)
-            self.sess.get(URL.syk_base_url + "/StuExpbook/login.jsp")
+            verify = self.sess.get(URL.syk_auth_url)
+            soup = BeautifulSoup(verify.text, "lxml")
+            script = soup.find("script")
+            if script:
+                string = script.string
+                c = re.compile(r"window\.location='(.+)';")
+                location = c.match(string)
+                verify_href = location.group(1)
+                self.sess.get(URL.syk_base_url + verify_href)
+                self.sess.get(URL.syk_base_url + "/StuExpbook/login.jsp")
+            else:
+                logger.error("❌ 登录实验课网站失败：{}".format(str(soup)))
+        except Exception:
+            logger.debug("❌ 登录验证常用教务网站失败。")
         else:
-            logger.error("登录实验课网站失败：{}".format(str(soup)))
+            logger.debug("✔ 登录验证常用教务网站成功。")
