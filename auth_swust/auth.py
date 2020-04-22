@@ -183,7 +183,7 @@ class Login:
         return self.sess.cookies
 
     def get_cookie_jar_obj(self):
-        logger.warn("deprecated: 请使用 get_cookies() 方法。")
+        logger.warning("deprecated: 请使用 get_cookies() 方法。")
         return self.get_cookies()
 
     def add_common_website_cookies(self):

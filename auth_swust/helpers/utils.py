@@ -20,7 +20,7 @@ def encrypt(public_modulus_hex, public_exponent_hex):
     return cipher
 
 
-def retry(times: int = 3, second: int = 1):
+def retry(times: int = 3, second: float = 1):
     def decorator(func):
         def wrapper(*args, **kwargs):
             i = 0
