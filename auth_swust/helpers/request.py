@@ -65,7 +65,9 @@ class Session(_Session):
         redirected, url = meta_redirect(response.text)
         while redirected:
             logger.debug("跟随页面重定向:{}".format(url))
-            response = self.get(url, hooks={}, **kwargs)
+            response = self.get(
+                url, hooks={}, headers={"Referer": response.url}, **kwargs
+            )
             redirected, url = meta_redirect(response.text)
 
         return response
