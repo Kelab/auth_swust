@@ -1,21 +1,16 @@
 import string
 import numpy as np
-import tensorflow as tf
 
 from pathlib import Path
-from keras.models import model_from_yaml
+from tensorflow.keras import models
 
 # 使用绝对路径 设置model的位置
-weight_path = str(
-    Path(__file__).parent.joinpath("model", "keras_cnn", "keras_cnn.weight")
-)
-model_path = str(Path(__file__).parent.joinpath("model", "keras_cnn", "keras_cnn.yml"))
+weight_path = str(Path(__file__).parent.joinpath("model", "tensorflow2", "weights.h5"))
+model_path = str(Path(__file__).parent.joinpath("model", "tensorflow2", "cnn.json"))
 # 加载模型
 with open(model_path) as f:
-    model = model_from_yaml(f.read())
+    model = models.model_from_json(f.read())
     model.load_weights(weight_path)
-
-graph = tf.compat.v1.get_default_graph()
 
 label_list = list(string.ascii_uppercase + string.digits)
 
@@ -31,7 +26,5 @@ def decode(pred_array):
 
 def _predict(subimages):
     dataset = np.array(subimages)
-    global graph
-    with graph.as_default():
-        predicted_word = decode(model.predict(dataset.reshape((4, 1, 32, 32))))
+    predicted_word = decode(model.predict(dataset.reshape((4, 32, 32, 1))))
     return predicted_word
