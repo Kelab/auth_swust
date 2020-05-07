@@ -28,7 +28,7 @@ pip install auth-swust
 import os
 import sys
 
-# 设置验证码识别框架 需要先安装 keras, tensorflow
+# 设置验证码识别框架 需要先安装 tensorflow>=2.1.0
 os.environ['CAPTCHA_BACKEND'] = "keras"
 from loguru import logger
 from auth_swust import Login, default_logger

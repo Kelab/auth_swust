@@ -22,6 +22,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
+    extras_require={"tensorflow": ["tensorflow>=2.1.0"]},
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
