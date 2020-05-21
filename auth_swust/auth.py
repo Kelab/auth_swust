@@ -24,18 +24,22 @@ class Login:
     :raises AuthFailError: 用户名或密码错误\n
     :raises CaptchaFailError: 验证码无效
     """
-
     def __init__(self, username, password):
         self.username = username
         self.password = password
 
+        self.login_other = None
         self.init_resp = None
         self.cap_code = None
         self.hidden_values = defaultdict(str)
 
     @retry(times=5, second=0.3)
-    def try_login(self) -> Union[Tuple[bool, str], Tuple[bool, Any]]:
+    def try_login(
+            self,
+            login_other=True) -> Union[Tuple[bool, str], Tuple[bool, Any]]:
         """尝试登录
+        参数：login_other: bool 是否顺带登录教务处和实验课的网站以获取相应 cookie
+
         因为装饰器的缘故，真正的返回内容在装饰器中：。
 
         :return: 返回的是一个 tuple 元组：(result, info)
@@ -48,6 +52,7 @@ class Login:
 
         登录成功 -> 返回 (True, 个人信息); 个人信息是一个 Response 对象
         """
+        self.login_other = login_other
         try:
             # 在这些函数内部有 raise 产生错误来中断程序运行
             # 在外层可以捕捉到并进行处理
@@ -163,7 +168,8 @@ class Login:
     # 检查是否登陆成功
     def check_success(self):
         # 请求个人信息 expect: json格式的个人信息
-        resp: Response = self.sess.get(URL.student_info_url, allow_redirects=True)
+        resp: Response = self.sess.get(URL.student_info_url,
+                                       allow_redirects=True)
 
         # 试试获取到的是不是 json 数据：
         # 1. 获取到的不是 json 数据的话执行 json() 方法会报错
@@ -175,16 +181,13 @@ class Login:
             return False, "NormalFail"
         else:
             logger.info("登录成功。")
-            self.add_common_website_cookies()
+            if self.login_other:
+                self.add_common_website_cookies()
             self.sess.close()
             return True, resp
 
     def get_cookies(self):
         return self.sess.cookies
-
-    def get_cookie_jar_obj(self):
-        logger.warning("deprecated: 请使用 get_cookies() 方法。")
-        return self.get_cookies()
 
     def add_common_website_cookies(self):
         logger.debug("正在登录验证常用教务网站。")
@@ -202,7 +205,7 @@ class Login:
                 self.sess.get(URL.syk_base_url + verify_href)
                 self.sess.get(URL.syk_base_url + "/StuExpbook/login.jsp")
             else:
-                logger.error("❌ 登录实验课网站失败：{}".format(str(soup)))
+                logger.error("❌ 登录实验课网站失败")
         except Exception:
             logger.debug("❌ 登录验证常用教务网站失败。")
         else:

@@ -2,10 +2,9 @@ import numpy as np
 from PIL import Image
 from skimage import filters
 from skimage.morphology import disk
-from loguru import logger
 
-
-cord_list = [[0, 1], [1, 0], [1, 1], [-1, -1], [-1, 0], [-1, 1], [0, -1], [1, -1]]
+cord_list = [[0, 1], [1, 0], [1, 1], [-1, -1], [-1, 0], [-1, 1], [0, -1],
+             [1, -1]]
 
 
 def enhance(image: np.ndarray) -> np.ndarray:
@@ -13,7 +12,6 @@ def enhance(image: np.ndarray) -> np.ndarray:
     result = image.copy()
     w, h = image.shape
     thres = filters.threshold_otsu(image)
-    logger.debug("ostu thres: {}", thres)
     window = []
     for i in range(w):
         for j in range(h):

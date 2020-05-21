@@ -22,7 +22,7 @@ pip install auth-swust
 
 注意，在你开始使用之前，需要安装需要的两个[深度学习框架](https://github.com/BuddingLab/auth_swust/wiki/%E9%80%89%E6%8B%A9%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A1%86%E6%9E%B6)**之一**！
 
-在你的项目中引入包：
+例子：
 
 ```python
 import os
@@ -38,9 +38,11 @@ logger.remove(default_logger)
 logger.add(sys.stdout, level="DEBUG")
 
 login = Login("xxxxxx", "xxxxxxx")
-res, info = login.try_login()
+res, info = login.try_login(login_other=True)
 # 使用上面的返回值进行下一步的处理
 # 具体返回值类型可以查看代码 try_login 的注释
+if res:
+    print(info)
 ```
 
 如果你想设置 log 等级，请查看: [设置 LOG](https://github.com/BuddingLab/auth_swust/wiki/%E8%AE%BE%E7%BD%AE-LOG)
